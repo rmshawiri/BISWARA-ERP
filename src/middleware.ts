@@ -5,47 +5,51 @@ type CookieToSet = { name: string; value: string; options?: CookieOptions };
 
 /**
  * Middleware : rafraîchit la session Supabase et protège les routes.
- * - Rafraîchit automatiquement les cookies d'authentification.
- * - Redirige vers /login les routes privées non authentifiées.
+ * - Robuste : n'échoue JAMAIS (aucun crash, pas de 500).
+ * - Si la config Supabase est absente ou que la vérification de session échoue,
+ *   on laisse passer et la protection est assurée côté serveur (requireUser).
  */
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (url && anonKey) {
+    try {
+      const supabase = createServerClient(url, anonKey, {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet: CookieToSet[]) {
+            cookiesToSet.forEach(({ name, value }) =>
+              request.cookies.set(name, value)
+            );
+            supabaseResponse = NextResponse.next({ request });
+            cookiesToSet.forEach(({ name, value, options }) =>
+              supabaseResponse.cookies.set(name, value, options)
+            );
+          },
         },
-        setAll(cookiesToSet: CookieToSet[]) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
-          supabaseResponse = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          );
-        },
-      },
+      });
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      const path = request.nextUrl.pathname;
+      const protectedPrefixes = ["/app", "/admin", "/onboarding"];
+
+      if (protectedPrefixes.some((p) => path.startsWith(p)) && !user) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/login";
+        return NextResponse.redirect(url);
+      }
+    } catch {
+      // En cas d'erreur (réseau, config) : ne jamais casser le site.
+      return supabaseResponse;
     }
-  );
-
-  // Récupère l'utilisateur pour (dé)valider la session.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const path = request.nextUrl.pathname;
-
-  // Routes protégées (espace application / admin).
-  const protectedPrefixes = ["/app", "/admin", "/onboarding"];
-
-  if (protectedPrefixes.some((p) => path.startsWith(p)) && !user) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
   }
 
   return supabaseResponse;
