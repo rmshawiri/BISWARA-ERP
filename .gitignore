@@ -1,0 +1,53 @@
+# ============================================================
+# BISWARA ERP - .gitignore
+# Protège les secrets et les artefacts de build.
+# NE JAMAIS retirer .env* de ce fichier.
+# ============================================================
+
+# --- Secrets / variables d'environnement (JAMAIS versionnées) ---
+.env
+.env.*
+!.env.example
+*.env.local
+
+# --- Node / Build ---
+node_modules/
+.pnpm-store/
+.next/
+out/
+dist/
+build/
+.vercel/
+.turbo/
+
+# --- TypeScript ---
+*.tsbuildinfo
+next-env.d.ts
+
+# --- Tests ---
+coverage/
+playwright-report/
+test-results/
+.vitest/
+
+# --- Drizzle / Supabase local ---
+supabase/.branches/
+supabase/.temp/
+
+# --- Logs ---
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- OS / IDE ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# --- Divers ---
+*.pem
+*.key

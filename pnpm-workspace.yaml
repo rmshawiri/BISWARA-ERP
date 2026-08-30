@@ -1,0 +1,9 @@
+# BISWARA ERP — configuration pnpm (monorepo : une seule application).
+# Les binaires natifs (esbuild, @swc/core, sharp, unrs-resolver) sont
+# fournis via des dépendances optionnelles ; leur script de build de
+# postinstall n'est pas requis et est désactivé par mesure de sécurité.
+allowBuilds:
+  esbuild: false
+  unrs-resolver: false
+  "@swc/core": false
+  sharp: false
