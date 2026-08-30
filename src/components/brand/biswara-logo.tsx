@@ -1,33 +1,38 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Logo BISWARA — élément protégé.
- * Le logo officiel NE DOIT PAS être modifié. Ici nous rendons le nom
- * + un pictogramme de marque (carré bleu MORA). Les assets officiels
- * (SVG fournis) seront utilisés via /public/logo/ pour le rendu exact.
+ * Logo BISWARA — élément PROTÉGÉ.
+ * Le logo officiel (carré, fond blanc) est utilisé tel quel via les assets
+ * de /public/logo. On ne modifie ni ses couleurs, ni ses proportions :
+ * l'interface s'adapte au logo (version pour fond clair ou fond sombre).
  */
 export function BiswaraLogo({
   className,
+  variant = "light",
   showSlogan = false,
 }: {
   className?: string;
+  /** 'light' = sur fond clair, 'dark' = sur fond sombre */
+  variant?: "light" | "dark";
   showSlogan?: boolean;
 }) {
   return (
     <div className={cn("flex items-center gap-2.5", className)}>
-      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-biswara-blue">
-        <span className="font-bold text-biswara-gold">B</span>
-      </div>
-      <div className="flex flex-col leading-tight">
-        <span className="text-base font-bold tracking-tight text-biswara-blue">
-          BISWARA
+      {/* eslint-disable-next-line @next/next/no-img-element -- asset statique officiel */}
+      <img
+        src={
+          variant === "dark"
+            ? "/logo/logo-biswara-horizontal-dark.png"
+            : "/logo/logo-biswara-horizontal-light.png"
+        }
+        alt="BISWARA"
+        className="h-8 w-auto shrink-0 object-contain"
+      />
+      {showSlogan && (
+        <span className="hidden text-[10px] leading-tight text-muted-foreground sm:block">
+          Le Choix Optimal pour votre performance.
         </span>
-        {showSlogan && (
-          <span className="text-[10px] text-muted-foreground">
-            Le Choix Optimal pour votre performance.
-          </span>
-        )}
-      </div>
+      )}
     </div>
   );
 }

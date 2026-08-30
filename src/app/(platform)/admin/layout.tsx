@@ -31,8 +31,8 @@ export default async function AdminLayout({
     <div className="flex min-h-screen bg-muted/20">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r bg-biswara-blue text-white lg:flex">
         <div className="flex h-16 items-center border-b border-white/10 px-5 text-white">
-          <BiswaraLogo />
-          <span className="ml-2 rounded bg-biswara-gold px-1.5 py-0.5 text-[10px] font-bold uppercase text-black">
+          <BiswaraLogo variant="dark" />
+          <span className="ml-2 rounded bg-biswara-gold-500 px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
             Admin
           </span>
         </div>

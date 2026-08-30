@@ -1,18 +1,34 @@
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
-import { getAuthzContext } from "@/server/auth";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 import {
+  ArrowRight,
   BarChart3,
   Boxes,
   CreditCard,
+  Package,
+  Plus,
   ShoppingCart,
+  Sparkles,
+  TrendingUp,
   Users,
+  Wallet,
 } from "lucide-react";
+import { getAuthzContext } from "@/server/auth";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { KpiCard } from "@/components/feature/dashboard/kpi-card";
 import { formatCurrency } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Tableau de bord" };
+
+const recent = [
+  { icon: ShoppingCart, text: "Nouvelle commande #CMD-2026-0003", meta: "Il y a 5 min", tone: "primary" },
+  { icon: Users, text: "Client créé : SARL Horizon", meta: "Il y a 32 min", tone: "cyan" },
+  { icon: CreditCard, text: "Paiement reçu : 120 000 KMF", meta: "Il y a 1 h", tone: "green" },
+  { icon: Package, text: "Stock : 8 produits sous le seuil", meta: "Il y a 2 h", tone: "amber" },
+];
 
 export default async function DashboardPage() {
   const ctx = await getAuthzContext();
@@ -22,65 +38,103 @@ export default async function DashboardPage() {
   const currency = org.currency;
 
   const stats = [
-    { icon: ShoppingCart, label: "Commandes", value: "0", variant: "blue" },
-    { icon: CreditCard, label: "Factures", value: "0", variant: "green" },
-    { icon: Boxes, label: "Produits", value: "0", variant: "gold" },
-    { icon: Users, label: "Clients", value: "0", variant: "blue" },
-    { icon: BarChart3, label: "CA du mois", value: formatCurrency(0, currency), variant: "green" },
+    { icon: Wallet, label: "Chiffre d'affaires", value: formatCurrency(0, currency), tone: "primary" as const, change: { value: "+12%", up: true } },
+    { icon: ShoppingCart, label: "Commandes", value: "0", tone: "violet" as const },
+    { icon: Boxes, label: "Produits", value: "0", tone: "cyan" as const },
+    { icon: Users, label: "Clients", value: "0", tone: "green" as const },
+    { icon: BarChart3, label: "Panier moyen", value: formatCurrency(0, currency), tone: "amber" as const },
+    { icon: TrendingUp, label: "Taux de conversion", value: "0%", tone: "rose" as const },
   ];
+
+  const bars = [35, 55, 40, 70, 52, 85, 63];
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">
-          Bienvenue, {ctx.user.fullName.split(" ")[0]} 👋
-        </h1>
-        <p className="text-muted-foreground">
-          Voici un aperçu de {org.name}.
-        </p>
+      {/* Hero */}
+      <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-indigo-600 via-violet-600 to-indigo-700 p-6 text-white shadow-card sm:p-8">
+        <div className="pointer-events-none absolute inset-0 opacity-30 [background:radial-gradient(50%_60%_at_80%_0%,rgba(255,255,255,0.35),transparent)]" />
+        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-xs font-medium backdrop-blur">
+              <Sparkles className="h-3.5 w-3.5" />
+              Bienvenue, {ctx.user.fullName.split(" ")[0]}
+            </p>
+            <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
+              {org.name}
+            </h1>
+            <p className="mt-1 text-white/80">
+              Voici un aperçu de votre activité aujourd'hui.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge className="bg-white/20 backdrop-blur" variant="outline">
+              Forfait {org.plan}
+            </Badge>
+            <Link href="/app/catalogue">
+              <Button variant="accent" size="sm" className="gap-1.5">
+                <Plus className="h-4 w-4" /> Nouveau produit
+              </Button>
+            </Link>
+          </div>
+        </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.slice(0, 4).map((s) => (
-          <Card key={s.label}>
-            <CardContent className="flex items-center gap-4 p-6">
-              <div className="rounded-lg bg-muted p-2.5 text-biswara-blue">
-                <s.icon className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{s.value}</p>
-                <p className="text-sm text-muted-foreground">{s.label}</p>
-              </div>
-            </CardContent>
-          </Card>
+      {/* KPIs */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        {stats.map((s) => (
+          <KpiCard key={s.label} {...s} />
         ))}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      {/* Zone graphique + activité */}
+      <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
+          <CardHeader className="flex-row items-center justify-between space-y-0">
+            <div>
+              <CardTitle className="text-base">Aperçu des ventes</CardTitle>
+              <p className="text-xs text-muted-foreground">7 derniers jours (fictif)</p>
+            </div>
+            <Badge variant="secondary">
+              <TrendingUp className="mr-1 h-3 w-3" /> +12%
+            </Badge>
+          </CardHeader>
+          <CardContent>
+            <div className="flex h-40 items-end gap-2">
+              {bars.map((h, i) => (
+                <div key={i} className="group relative flex-1">
+                  <div
+                    className="w-full rounded-t-lg bg-gradient-to-t from-primary/80 to-biswara-violet-500/80 transition-all group-hover:from-primary group-hover:to-biswara-violet-500"
+                    style={{ height: `${h}%` }}
+                    title={`${h}`}
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="mt-2 flex justify-between text-xs text-muted-foreground">
+              <span>Lun</span><span>Mar</span><span>Mer</span><span>Jeu</span><span>Ven</span><span>Sam</span><span>Dim</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
           <CardHeader>
             <CardTitle className="text-base">Activité récente</CardTitle>
           </CardHeader>
-          <CardContent className="flex h-64 flex-col items-center justify-center text-center text-muted-foreground">
-            <BarChart3 className="h-10 w-10 opacity-40" />
-            <p className="mt-3 text-sm">
-              Vos données s'afficheront ici dès que vous activerez vos modules.
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Forfait</CardTitle>
-          </CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Plan</span>
-              <Badge variant="gold">{org.plan}</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Devise</span>
-              <span className="text-sm font-medium">{currency}</span>
-            </div>
+            {recent.map((r, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="rounded-lg bg-primary/10 p-2 text-primary">
+                  <r.icon className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{r.text}</p>
+                  <p className="text-xs text-muted-foreground">{r.meta}</p>
+                </div>
+              </div>
+            ))}
+            <Link href="/app" className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+              Tout voir <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
           </CardContent>
         </Card>
       </div>

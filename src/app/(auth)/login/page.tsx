@@ -4,6 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
+import { ArrowRight, CheckCircle2, ShieldCheck, Sparkles, Zap } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { resolveIdentifier } from "@/server/auth-actions";
 import { loginSchema } from "@/lib/validation";
@@ -38,8 +39,6 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const supabase = createClient();
-
-      // Résout l'identifiant (email ou nom d'utilisateur) vers l'email.
       const resolved = await resolveIdentifier(identifier);
       if (!resolved.email) {
         toast.error(resolved.error ?? "Identifiant introuvable");
@@ -55,7 +54,6 @@ export default function LoginPage() {
         return;
       }
 
-      // Redirige selon le rôle (Super Admin => /admin, sinon /app).
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -80,60 +78,89 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4 py-12">
-      <div className="w-full max-w-md">
-        <Link href="/" className="mb-8 flex justify-center">
-          <BiswaraLogo />
+    <div className="grid min-h-screen lg:grid-cols-2">
+      {/* Panneau de marque */}
+      <div className="relative hidden overflow-hidden bg-gradient-to-br from-indigo-700 via-violet-700 to-indigo-900 text-white lg:flex lg:flex-col lg:justify-between lg:p-12">
+        <div className="pointer-events-none absolute inset-0 opacity-30 [background:radial-gradient(50%_50%_at_80%_10%,rgba(255,255,255,0.4),transparent)]" />
+        <Link href="/" className="relative">
+          <BiswaraLogo variant="dark" />
         </Link>
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Connexion</CardTitle>
-            <CardDescription>
-              Connectez-vous à votre espace BISWARA.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={onSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="identifier">Email ou nom d'utilisateur</Label>
-                <Input
-                  id="identifier"
-                  name="identifier"
-                  placeholder="vous@entreprise.com ou rachade"
-                  autoComplete="username"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Mot de passe</Label>
-                  <Link
-                    href="/mot-de-passe-oublie"
-                    className="text-xs text-muted-foreground hover:text-foreground"
-                  >
-                    Mot de passe oublié ?
-                  </Link>
+        <div className="relative space-y-6">
+          <h1 className="max-w-md text-3xl font-bold leading-tight">
+            Pilotez votre entreprise depuis une seule plateforme.
+          </h1>
+          <p className="max-w-sm text-white/80">
+            Centralisez votre gestion, automatisez vos tâches et prenez de
+            meilleures décisions avec BISWARA ERP OS.
+          </p>
+          <ul className="space-y-2.5">
+            {[
+              { icon: Zap, text: "Rapide et moderne" },
+              { icon: ShieldCheck, text: "Sécurisé & multi-tenant" },
+              { icon: Sparkles, text: "ERP tout-en-un" },
+            ].map((f) => (
+              <li key={f.text} className="flex items-center gap-3 text-white/90">
+                <f.icon className="h-4 w-4 text-biswara-gold-400" />
+                <span className="text-sm font-medium">{f.text}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <p className="relative text-sm text-white/50">
+          © {new Date().getFullYear()} BISWARA ERP OS — MORA Shawiri
+        </p>
+      </div>
+
+      {/* Formulaire */}
+      <div className="flex items-center justify-center bg-muted/30 px-4 py-12">
+        <div className="w-full max-w-sm">
+          <Link href="/" className="mb-8 flex justify-center lg:hidden">
+            <BiswaraLogo />
+          </Link>
+          <Card className="card-premium">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl">Connexion</CardTitle>
+              <CardDescription>Connectez-vous à votre espace BISWARA.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={onSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="identifier">Email ou nom d'utilisateur</Label>
+                  <Input
+                    id="identifier"
+                    name="identifier"
+                    placeholder="vous@entreprise.com ou rachade"
+                    autoComplete="username"
+                    required
+                  />
                 </div>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                />
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password">Mot de passe</Label>
+                    <Link href="/mot-de-passe-oublie" className="text-xs text-muted-foreground hover:text-foreground">
+                      Oublié ?
+                    </Link>
+                  </div>
+                  <Input id="password" name="password" type="password" autoComplete="current-password" required />
+                </div>
+                <Button className="w-full" size="lg" disabled={loading}>
+                  {loading ? "Connexion…" : "Se connecter"}
+                  {!loading && <ArrowRight className="ml-1 h-4 w-4" />}
+                </Button>
+              </form>
+              <p className="mt-6 flex items-center justify-center gap-1.5 text-center text-sm text-muted-foreground">
+                Pas encore de compte ?{" "}
+                <Link href="/signup" className="inline-flex items-center gap-1 font-medium text-primary hover:underline">
+                  Créer mon espace <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </p>
+              <div className="mt-6 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+                <CheckCircle2 className="h-3.5 w-3.5 text-biswara-green-500" />
+                Accès sécurisé & chiffré
               </div>
-              <Button className="w-full" disabled={loading}>
-                {loading ? "Connexion…" : "Se connecter"}
-              </Button>
-            </form>
-            <p className="mt-6 text-center text-sm text-muted-foreground">
-              Pas encore de compte ?{" "}
-              <Link href="/signup" className="font-medium text-primary hover:underline">
-                Créer mon espace BISWARA
-              </Link>
-            </p>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

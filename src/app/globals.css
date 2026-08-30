@@ -4,50 +4,75 @@
 
 @layer base {
   :root {
-    --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-      "Helvetica Neue", Arial, sans-serif;
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
+    /* Palette BISWARA — identité visuelle moderne (indigo/violet/cyan) */
+    --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+      Roboto, "Helvetica Neue", Arial, sans-serif;
+
+    --background: 210 40% 98%; /* slate-50 */
+    --foreground: 224 71% 4%; /* slate-950 */
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 224 71% 4%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --primary: 216 100% 20%;
+    --popover-foreground: 224 71% 4%;
+
+    --primary: 243 75% 59%; /* indigo-500 */
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222 47% 11%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 216 100% 20%;
-    --radius: 0.5rem;
+    --primary-deep: 243 75% 45%;
+    --secondary: 220 14% 96%; /* slate-100 */
+    --secondary-foreground: 224 71% 8%;
+    --muted: 215 20% 94%;
+    --muted-foreground: 219 11% 46%;
+    --accent: 243 75% 96%;
+    --accent-foreground: 243 75% 35%;
+    --destructive: 349 80% 55%; /* rose-500 */
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 152 76% 40%; /* emerald-600 */
+    --warning: 38 92% 50%; /* amber-500 */
+    --info: 188 86% 43%; /* cyan-500 */
+
+    --border: 220 15% 90%;
+    --input: 220 15% 88%;
+    --ring: 243 75% 59%;
+
+    --radius: 0.75rem;
+
+    /* nuages dégradés */
+    --grad-brand: linear-gradient(135deg, #6366f1 0%, #8b5cf6 55%, #06b6d4 100%);
+    --shadow-soft: 0 1px 2px rgba(15, 23, 42, 0.04),
+      0 4px 16px rgba(15, 23, 42, 0.06);
   }
 
   .dark {
-    --background: 222 47% 9%;
+    --background: 224 47% 6%; /* slate-950 */
     --foreground: 210 40% 98%;
-    --card: 222 47% 11%;
+    --card: 224 30% 9%;
     --card-foreground: 210 40% 98%;
-    --popover: 222 47% 11%;
+    --popover: 224 30% 9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 216 100% 30%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 217 33% 17%;
+
+    --primary: 239 84% 67%; /* indigo-400 */
+    --primary-foreground: 226 40% 8%;
+    --primary-deep: 243 75% 60%;
+    --secondary: 220 20% 15%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 17%;
+    --muted: 218 20% 16%;
     --muted-foreground: 215 20% 65%;
-    --accent: 217 33% 17%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 63% 31%;
+    --accent: 243 40% 22%;
+    --accent-foreground: 210 40% 92%;
+    --destructive: 350 70% 55%;
     --destructive-foreground: 0 0% 98%;
-    --border: 217 33% 20%;
-    --input: 217 33% 20%;
-    --ring: 216 100% 40%;
+
+    --success: 152 76% 45%;
+    --warning: 38 92% 55%;
+    --info: 188 86% 50%;
+
+    --border: 217 33% 22%;
+    --input: 217 33% 22%;
+    --ring: 239 84% 67%;
+
+    --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.4),
+      0 8px 24px rgba(0, 0, 0, 0.4);
   }
 }
 
@@ -55,24 +80,93 @@
   * {
     @apply border-border;
   }
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
   body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "rlig" 1, "calt" 1;
+    letter-spacing: -0.011em;
+  }
+  ::selection {
+    background: hsl(var(--primary) / 0.16);
+    color: hsl(var(--foreground));
   }
 }
 
-/* Scrollbar discrète et cohérente */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+@layer components {
+  /* Barre de défilement discrète */
+  ::-webkit-scrollbar {
+    width: 9px;
+    height: 9px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--muted-foreground) / 0.22);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground) / 0.38);
+  }
+
+  /* Carte premium */
+  .card-premium {
+    @apply rounded-2xl border border-border/70 bg-card shadow-[var(--shadow-soft)];
+  }
+
+  /* Effet verre (glass) */
+  .glass {
+    background: hsl(var(--card) / 0.72);
+    backdrop-filter: blur(12px) saturate(1.2);
+    -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  }
+
+  /* Texte en dégradé de marque */
+  .text-brand-gradient {
+    background: var(--grad-brand);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Fond de marque en dégradé */
+  .bg-brand-gradient {
+    background: var(--grad-brand);
+  }
+
+  /* Animation d'entrée fluide */
+  .animate-in-up {
+    animation: bwr-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
 }
-::-webkit-scrollbar-track {
-  background: transparent;
+
+@keyframes bwr-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
-::-webkit-scrollbar-thumb {
-  background-color: hsl(var(--muted-foreground) / 0.25);
-  border-radius: 9999px;
+
+@keyframes bwr-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
-::-webkit-scrollbar-thumb:hover {
-  background-color: hsl(var(--muted-foreground) / 0.4);
+
+@keyframes bwr-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
 }
