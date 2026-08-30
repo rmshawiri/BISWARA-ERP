@@ -22,7 +22,6 @@ interface Item {
 export function GlobalSearch({ className }: { className?: string }) {
   const [query, setQuery] = React.useState("");
   const [items, setItems] = React.useState<Item[]>([]);
-  const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
   const [focus, setFocus] = React.useState(false);
   const debounced = useDebounced(query, 250);
@@ -66,7 +65,6 @@ export function GlobalSearch({ className }: { className?: string }) {
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
-            setOpen(true);
           }}
           onFocus={() => setFocus(true)}
           onBlur={() => setFocus(false)}

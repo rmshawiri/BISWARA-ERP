@@ -125,7 +125,10 @@ export function InvoiceDocument(props: InvoiceDocProps) {
         {/* En-tête : entreprise + titre doc */}
         <View style={styles.header}>
           <View>
-            {props.logoUrl && <Image src={props.logoUrl} style={{ width: 48, height: 48 }} />}
+            {props.logoUrl && (
+              // eslint-disable-next-line jsx-a11y/alt-text -- Image est un composant react-pdf (pas un <img> HTML)
+              <Image src={props.logoUrl} style={{ width: 48, height: 48 }} />
+            )}
             <Text style={styles.company}>{company.name}</Text>
             <Text style={styles.companyMeta}>
               {company.address} {company.phone && `· ${company.phone}`}{" "}

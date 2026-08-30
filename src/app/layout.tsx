@@ -3,8 +3,16 @@ import "./globals.css";
 import { Providers } from "@/providers/providers";
 import { siteConfig } from "@/lib/config";
 
+function safeBaseUrl(): URL | undefined {
+  try {
+    return new URL(siteConfig.url);
+  } catch {
+    return undefined;
+  }
+}
+
 export const metadata: Metadata = {
-  metadataBase: new URL(siteConfig.url),
+  metadataBase: safeBaseUrl(),
   title: {
     default: `${siteConfig.name} — ${siteConfig.slogan}`,
     template: `%s | ${siteConfig.name}`,

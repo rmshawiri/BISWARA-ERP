@@ -4,6 +4,13 @@
  * Aucun secret n'est codé en dur ici.
  */
 
+// URL de base robuste (jamais vide) — utilisé pour metadataBase / og:url.
+function resolveSiteUrl(): string {
+  const raw = process.env.NEXT_PUBLIC_SITE_URL;
+  const url = (raw && raw.trim()) || "http://localhost:3000";
+  return url.replace(/\/+$/, "");
+}
+
 export const siteConfig = {
   name: "BISWARA ERP OS",
   shortName: "BISWARA",
@@ -11,7 +18,7 @@ export const siteConfig = {
   description:
     "BISWARA ERP OS — la plateforme ERP SaaS modulaire, multi-tenant et sécurisée pour piloter toute votre activité depuis une plateforme unique.",
   author: "MORA Shawiri",
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+  url: resolveSiteUrl(),
   // Numéro WhatsApp officiel (utilisé par les boutons Souscrire / Démo)
   whatsappNumber: process.env.NEXT_PUBLIC_BISWARA_WHATSAPP_NUMBER ?? "+2694306306",
   // Devise par défaut
