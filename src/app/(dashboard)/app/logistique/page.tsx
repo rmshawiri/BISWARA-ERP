@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getAuthzContext } from "@/server/auth";
-import { listVehicles, listDeliveries } from "@/modules/logistics";
-import type { Vehicle, Delivery } from "@/db/schema";
+import { listVehicles, listDeliveries, listDrivers, listRoutes, listFuelLogs, listMaintenanceLogs, listIncidents } from "@/modules/logistics";
+import type { Vehicle, Delivery, Driver, Route, FuelLog, MaintenanceLog, Incident } from "@/db/schema";
 import { NewVehicleButton, NewDeliveryButton } from "@/components/feature/logistics/logistics-buttons";
+import { FleetManager } from "@/components/feature/logistics/fleet-manager";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Truck, MapPin } from "lucide-react";
@@ -30,11 +31,23 @@ export default async function LogistiquePage() {
 
   let vehicles: Vehicle[] = [];
   let deliveries: Delivery[] = [];
+  let drivers: Driver[] = [];
+  let routes: Route[] = [];
+  let fuelLogs: FuelLog[] = [];
+  let maintenance: MaintenanceLog[] = [];
+  let incidents: Incident[] = [];
   let dbReady = true;
   try {
-    const [v, d] = await Promise.all([listVehicles(ctx), listDeliveries(ctx)]);
+    const [v, d, dr, ro, fl, mt, ic] = await Promise.all([
+      listVehicles(ctx), listDeliveries(ctx), listDrivers(ctx), listRoutes(ctx), listFuelLogs(ctx), listMaintenanceLogs(ctx), listIncidents(ctx),
+    ]);
     if (v.ok) vehicles = v.data;
     if (d.ok) deliveries = d.data;
+    if (dr.ok) drivers = dr.data;
+    if (ro.ok) routes = ro.data;
+    if (fl.ok) fuelLogs = fl.data;
+    if (mt.ok) maintenance = mt.data;
+    if (ic.ok) incidents = ic.data;
   } catch {
     dbReady = false;
   }
@@ -130,6 +143,16 @@ export default async function LogistiquePage() {
           </CardContent>
         </Card>
       </div>
+
+      <FleetManager
+        drivers={drivers.map((d) => ({ id: d.id, name: d.name, phone: d.phone, license: d.license }))}
+        routes={routes.map((r) => ({ id: r.id, name: r.name, routeDate: r.routeDate, origin: r.origin, destination: r.destination, driverId: r.driverId }))}
+        fuelLogs={fuelLogs.map((f) => ({ id: f.id, liters: Number(f.liters), cost: Number(f.cost), odometer: f.odometer, vehicleId: f.vehicleId }))}
+        maintenance={maintenance.map((m) => ({ id: m.id, type: m.type, cost: Number(m.cost), vehicleId: m.vehicleId }))}
+        incidents={incidents.map((i) => ({ id: i.id, type: i.type, description: i.description, vehicleId: i.vehicleId }))}
+        vehicles={vehicles.map((x) => ({ id: x.id, label: x.plate }))}
+        currency={ctx.organization?.currency ?? "KMF"}
+      />
     </div>
   );
 }
