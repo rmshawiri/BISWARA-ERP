@@ -5,9 +5,13 @@ import {
   listAccounts,
   listJournals,
   listJournalEntries,
+  getBalance,
+  getGrandLivre,
+  getFinancialStatements,
 } from "@/modules/accounting";
 import type { ChartOfAccount, Journal, JournalEntry } from "@/db/schema";
 import { NewJournalEntryButton } from "@/components/feature/accounting/new-journal-entry-button";
+import { AccountingReports } from "@/components/feature/accounting/accounting-reports";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, PieChart } from "lucide-react";
@@ -29,17 +33,26 @@ export default async function ComptabilitePage() {
   let accounts: ChartOfAccount[] = [];
   let journals: Journal[] = [];
   let entries: JournalEntry[] = [];
+  let balance: { number: string; label: string; type: string | null; debit: number; credit: number; balance: number }[] = [];
+  let grandLivre: { date: string | null; number: string; label: string; debit: number; credit: number }[] = [];
+  let statements: { revenue: number; expense: number; net: number; assets: number; liabilities: number; equity: number } | null = null;
   let dbReady = true;
 
   try {
-    const [a, j, e] = await Promise.all([
+    const [a, j, e, b, gl, st] = await Promise.all([
       listAccounts(ctx),
       listJournals(ctx),
       listJournalEntries(ctx),
+      getBalance(ctx),
+      getGrandLivre(ctx),
+      getFinancialStatements(ctx),
     ]);
     if (a.ok) accounts = a.data;
     if (j.ok) journals = j.data;
     if (e.ok) entries = e.data;
+    if (b.ok) balance = b.data;
+    if (gl.ok) grandLivre = gl.data;
+    if (st.ok) statements = st.data;
   } catch {
     dbReady = false;
   }
@@ -50,6 +63,7 @@ export default async function ComptabilitePage() {
     id: x.id,
     label: x.name,
   }));
+  const currency = ctx.organization?.currency ?? "KMF";
   const accountOptions = accounts.map((x) => ({
     id: x.id,
     label: `${x.number ?? ""} ${x.label}`.trim(),
@@ -158,6 +172,8 @@ export default async function ComptabilitePage() {
           </CardContent>
         </Card>
       </div>
+
+      <AccountingReports balance={balance} grandLivre={grandLivre} statements={statements} currency={currency} />
     </div>
   );
 }

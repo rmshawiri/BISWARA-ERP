@@ -1,6 +1,6 @@
 import "server-only";
 
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { db } from "@/db";
 import { employees, leaveRequests } from "@/db/schema";
 import type { AuthzContext } from "@/types";
@@ -83,5 +83,79 @@ export async function listLeaveRequests(
     return ok(rows);
   } catch (e) {
     return err(e instanceof Error ? e.message : "Erreur de lecture");
+  }
+}
+
+/** Crée une demande de congé (statut pending). */
+export async function createLeaveRequest(
+  ctx: AuthzContext,
+  input: {
+    employeeId: string;
+    type: string;
+    startDate: string;
+    endDate: string;
+    days: number;
+    notes?: string | null;
+  }
+): Promise<Result<typeof leaveRequests.$inferSelect>> {
+  requirePerm(ctx, "create");
+  const orgId = ctx.organization!.id;
+  try {
+    const [row] = await db()
+      .insert(leaveRequests)
+      .values({
+        organizationId: orgId,
+        employeeId: input.employeeId,
+        type: input.type,
+        startDate: input.startDate,
+        endDate: input.endDate,
+        days: input.days,
+        notes: input.notes ?? null,
+        status: "pending",
+      })
+      .returning();
+    if (!row) return err("Création impossible.");
+    await logAudit({
+      userId: ctx.user.id,
+      userName: ctx.user.fullName,
+      organizationId: orgId,
+      module: MODULES.HR,
+      action: "leave.create",
+      entityType: "leave_request",
+      entityId: row.id,
+    });
+    return ok(row);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de création");
+  }
+}
+
+/** Approuve / rejette une demande de congé. */
+export async function decideLeave(
+  ctx: AuthzContext,
+  id: string,
+  decision: "approved" | "rejected"
+): Promise<Result<typeof leaveRequests.$inferSelect>> {
+  requirePerm(ctx, "update");
+  const orgId = ctx.organization!.id;
+  try {
+    const [row] = await db()
+      .update(leaveRequests)
+      .set({ status: decision })
+      .where(and(eq(leaveRequests.id, id), eq(leaveRequests.organizationId, orgId)))
+      .returning();
+    if (!row) return err("Demande introuvable.");
+    await logAudit({
+      userId: ctx.user.id,
+      userName: ctx.user.fullName,
+      organizationId: orgId,
+      module: MODULES.HR,
+      action: `leave.${decision}`,
+      entityType: "leave_request",
+      entityId: id,
+    });
+    return ok(row);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de décision");
   }
 }

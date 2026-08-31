@@ -5,6 +5,7 @@ import { listEmployees, listLeaveRequests } from "@/modules/hr";
 import { leaveBalance } from "@/modules/hr";
 import type { Employee, LeaveRequest } from "@/db/schema";
 import { NewEmployeeButton } from "@/components/feature/hr/new-employee-button";
+import { LeaveManager } from "@/components/feature/hr/leave-manager";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, CalendarDays } from "lucide-react";
@@ -149,6 +150,25 @@ export default async function RhPage() {
           </CardContent>
         </Card>
       </div>
+
+      <LeaveManager
+        employees={employees.map((e) => ({
+          id: e.id,
+          label: `${e.firstName} ${e.lastName}`,
+        }))}
+        leaves={leaves.map((lv) => ({
+          id: lv.id,
+          employeeName: (() => {
+            const emp = employeeById.get(lv.employeeId);
+            return emp ? `${emp.firstName} ${emp.lastName}` : "—";
+          })(),
+          type: LEAVE_TYPE_LABELS[lv.type] ?? lv.type,
+          startDate: lv.startDate ?? "",
+          endDate: lv.endDate ?? "",
+          days: lv.days,
+          status: lv.status,
+        }))}
+      />
     </div>
   );
 }

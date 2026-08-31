@@ -165,3 +165,93 @@ export async function listJournalEntries(
   }
 }
 
+/** Grand Livre : lignes d'un compte (ou de tous) avec date/n° de l'écriture. */
+export async function getGrandLivre(
+  ctx: AuthzContext,
+  accountId?: string
+): Promise<Result<{ date: string | null; number: string; label: string; debit: number; credit: number }[]>> {
+  requirePerm(ctx, "view");
+  const orgId = ctx.organization!.id;
+  try {
+    const rows = await db()
+      .select({
+        date: journalEntries.date,
+        number: journalEntries.number,
+        label: journalEntryLines.label,
+        debit: journalEntryLines.debit,
+        credit: journalEntryLines.credit,
+      })
+      .from(journalEntryLines)
+      .innerJoin(journalEntries, eq(journalEntryLines.entryId, journalEntries.id))
+      .innerJoin(chartOfAccounts, eq(journalEntryLines.accountId, chartOfAccounts.id))
+      .where(and(eq(chartOfAccounts.organizationId, orgId), accountId ? eq(journalEntryLines.accountId, accountId) : undefined))
+      .orderBy(journalEntries.date);
+    return ok(rows.map((r) => ({ date: r.date, number: r.number, label: r.label, debit: Number(r.debit), credit: Number(r.credit) })));
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de lecture");
+  }
+}
+
+/** Balance générale : total débit / crédit / solde par compte. */
+export async function getBalance(ctx: AuthzContext) {
+  requirePerm(ctx, "view");
+  const orgId = ctx.organization!.id;
+  try {
+    const accounts = await db().select().from(chartOfAccounts).where(eq(chartOfAccounts.organizationId, orgId));
+    const rows = await db()
+      .select({ accountId: journalEntryLines.accountId, debit: journalEntryLines.debit, credit: journalEntryLines.credit })
+      .from(journalEntryLines)
+      .innerJoin(journalEntries, eq(journalEntryLines.entryId, journalEntries.id))
+      .where(eq(journalEntries.organizationId, orgId));
+    const sums = new Map<string, { debit: number; credit: number }>();
+    for (const r of rows) {
+      const s = sums.get(r.accountId) ?? { debit: 0, credit: 0 };
+      s.debit += Number(r.debit);
+      s.credit += Number(r.credit);
+      sums.set(r.accountId, s);
+    }
+    return ok(
+      accounts.map((a) => {
+        const s = sums.get(a.id) ?? { debit: 0, credit: 0 };
+        return { number: a.number, label: a.label, type: a.type, debit: s.debit, credit: s.credit, balance: s.debit - s.credit };
+      })
+    );
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de lecture");
+  }
+}
+
+/** États financiers simplifiés (Résultat + Bilan). */
+export async function getFinancialStatements(ctx: AuthzContext) {
+  requirePerm(ctx, "view");
+  const orgId = ctx.organization!.id;
+  try {
+    const rows = await db()
+      .select({ type: chartOfAccounts.type, debit: journalEntryLines.debit, credit: journalEntryLines.credit })
+      .from(journalEntryLines)
+      .innerJoin(journalEntries, eq(journalEntryLines.entryId, journalEntries.id))
+      .innerJoin(chartOfAccounts, eq(journalEntryLines.accountId, chartOfAccounts.id))
+      .where(eq(chartOfAccounts.organizationId, orgId));
+    let revenue = 0, expense = 0, assets = 0, liabilities = 0, equity = 0;
+    for (const r of rows) {
+      const d = Number(r.debit), c = Number(r.credit);
+      if (r.type === "revenue") revenue += c - d;
+      else if (r.type === "expense") expense += d - c;
+      else if (r.type === "asset") assets += d - c;
+      else if (r.type === "liability") liabilities += c - d;
+      else if (r.type === "equity") equity += c - d;
+    }
+    return ok({
+      revenue,
+      expense,
+      net: revenue - expense,
+      assets,
+      liabilities,
+      equity,
+      balanceSheetCheck: assets - (liabilities + equity),
+    });
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de lecture");
+  }
+}
+
