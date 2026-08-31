@@ -3,14 +3,14 @@ import { computeTotals, type SalesLineInput } from "./validation";
 
 describe("computeTotals", () => {
   const lines: SalesLineInput[] = [
-    { description: "Produit A", quantity: 2, unitPrice: 1000, taxRate: 0.2 },
+    { description: "Produit A", quantity: 2, unitPrice: 1000, taxRate: 20 },
     { description: "Service B", quantity: 1, unitPrice: 500, taxRate: 0 },
   ];
 
   it("calcule sous-total, TVA et total sans remise", () => {
     const t = computeTotals(lines, 0);
     expect(t.subtotal).toBe(2500);
-    expect(t.taxTotal).toBe(400); // 2000 * 0.2
+    expect(t.taxTotal).toBe(400); // 2000 * 0.20 (taxRate en %)
     expect(t.discount).toBe(0);
     expect(t.total).toBe(2900);
   });

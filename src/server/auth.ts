@@ -98,6 +98,14 @@ export async function getAuthzContext(): Promise<AuthzContext | null> {
       organization = (org as Organization) ?? null;
     }
 
+    // C2 — Blocage d'accès : une organisation suspendue, ou dont l'abonnement
+    // n'est plus actif, ne peut pas être utilisée (isolation + règle forfait).
+    // Le Super Admin (aucune organisation) n'est jamais bloqué.
+    if (!superAdmin && organization) {
+      const blocked = await isOrganizationBlocked(supabase, organization);
+      if (blocked) return null;
+    }
+
     const permissions = await resolvePermissions(supabase, profileData);
     return { user: profileData, organization, superAdmin, permissions };
   } catch (e) {
@@ -122,4 +130,38 @@ export async function requireOrganizationUser(): Promise<AuthzContext> {
     redirect("/login");
   }
   return ctx;
+}
+
+/**
+ * Vérifie si l'accès à une organisation doit être bloqué.
+ * - L'organisation est suspendue → bloqué.
+ * - L'abonnement actif de l'organisation n'est plus actif → bloqué.
+ * - Aucun abonnement enregistré : on laisse passer (mode compat / avant seed).
+ * Retourne `true` si l'accès doit être refusé.
+ */
+export async function isOrganizationBlocked(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  organization: Organization
+): Promise<boolean> {
+  // 1. Statut de l'organisation
+  if (organization.status === "suspended") return true;
+
+  // 2. Statut de l'abonnement le plus récent
+  try {
+    const { data: sub } = await supabase
+      .from("subscriptions")
+      .select("status, plan")
+      .eq("organization_id", organization.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (sub && sub.status && !["active", "trial"].includes(sub.status)) {
+      return true;
+    }
+  } catch {
+    // En cas d'erreur réseau/lecture, on ne bloque pas (défaut permissif côté sécurité serveur).
+    return false;
+  }
+
+  return false;
 }

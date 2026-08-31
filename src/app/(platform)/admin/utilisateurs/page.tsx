@@ -5,6 +5,7 @@ import { Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { listUsers, type AdminUser } from "@/modules/platform";
+import { ResetPasswordButton } from "@/components/feature/platform/admin-reset-password";
 
 export const metadata: Metadata = { title: "Utilisateurs — Admin" };
 
@@ -56,7 +57,8 @@ export default async function AdminUsersPage() {
                     <th className="pb-2 pr-4">E-mail</th>
                     <th className="pb-2 pr-4">Rôle</th>
                     <th className="pb-2 pr-4">Organisation</th>
-                    <th className="pb-2">Statut</th>
+                    <th className="pb-2 pr-4">Statut</th>
+                    <th className="pb-2">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -75,6 +77,9 @@ export default async function AdminUsersPage() {
                         <Badge variant={u.status === "active" ? "success" : "warning"}>
                           {u.status === "active" ? "Actif" : "Suspendu"}
                         </Badge>
+                      </td>
+                      <td className="py-3">
+                        <ResetPasswordButton userId={u.id} />
                       </td>
                     </tr>
                   ))}

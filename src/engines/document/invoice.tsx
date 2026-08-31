@@ -170,7 +170,7 @@ export function InvoiceDocument(props: InvoiceDocProps) {
               <Text style={styles.tableCell}>{l.description}</Text>
               <Text style={[styles.tableCell, { flex: 0.5 }]}>{l.quantity}</Text>
               <Text style={[styles.tableCell, { flex: 0.8 }]}>{l.unitPrice.toFixed(2)}</Text>
-              <Text style={[styles.tableCell, { flex: 0.8 }]}>{l.taxRate * 100}%</Text>
+              <Text style={[styles.tableCell, { flex: 0.8 }]}>{l.taxRate}%</Text>
               <Text style={[styles.tableCell, { flex: 1 }]}>{l.lineTotal.toFixed(2)}</Text>
             </View>
           ))}

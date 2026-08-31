@@ -5,6 +5,7 @@ import { CreditCard } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { listSubscriptions, type AdminSubscription } from "@/modules/platform";
+import { OrgActions } from "@/components/feature/platform/admin-org-actions";
 
 export const metadata: Metadata = { title: "Abonnements — Admin" };
 
@@ -55,7 +56,8 @@ export default async function AdminSubscriptionsPage() {
                     <th className="pb-2 pr-4">Forfait</th>
                     <th className="pb-2 pr-4">Statut</th>
                     <th className="pb-2 pr-4">Début</th>
-                    <th className="pb-2">Fin</th>
+                    <th className="pb-2 pr-4">Fin</th>
+                    <th className="pb-2">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -75,6 +77,13 @@ export default async function AdminSubscriptionsPage() {
                       </td>
                       <td className="py-3 text-muted-foreground">
                         {s.endedAt?.toLocaleDateString("fr-FR") ?? "Illimitée"}
+                      </td>
+                      <td className="py-3">
+                        <OrgActions
+                          orgId={s.organizationId ?? ""}
+                          status={s.status}
+                          plan={s.plan}
+                        />
                       </td>
                     </tr>
                   ))}

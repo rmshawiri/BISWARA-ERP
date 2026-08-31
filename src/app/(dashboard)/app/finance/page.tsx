@@ -75,7 +75,7 @@ export default async function FinancePage() {
         <Card>
           <CardContent className="p-6 text-sm text-muted-foreground">
             Les tables métier ne sont pas encore disponibles. Appliquez la
-            migration <code>0003_business.sql</code> dans Supabase pour activer
+            migration <code>0004_sprint3.sql</code> dans Supabase pour activer
             ce module.
           </CardContent>
         </Card>

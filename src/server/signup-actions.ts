@@ -49,18 +49,43 @@ export async function createOrganization(
   }
 
   // 3. Activations par défaut : tous les modules du forfait "free".
+  //   Robustesse : si le catalogue n'est pas encore seedé dans la base,
+  //   on le crée à la volée pour garantir qu'une nouvelle organisation
+  //   reçoive bien ses modules de base par défaut.
+  const DEFAULT_FREE_MODULES: { id: string; name: string; default_plan: string }[] = [
+    { id: "admin", name: "Administration", default_plan: "free" },
+    { id: "settings", name: "Paramètres", default_plan: "free" },
+    { id: "notifications", name: "Centre de Notifications", default_plan: "free" },
+    { id: "crm", name: "CRM", default_plan: "free" },
+    { id: "catalog", name: "Catalogue Produits & Services", default_plan: "free" },
+    { id: "sales", name: "Gestion Commerciale", default_plan: "free" },
+    { id: "stock", name: "Stock & Inventaire", default_plan: "free" },
+  ];
+
+  let freeModules: { module_id: string; active: boolean; organization_id: string }[] = [];
   const { data: modules } = await admin
     .from("modules")
     .select("id, default_plan")
     .eq("active", true);
 
   if (modules && modules.length > 0) {
-    const freeModules = modules
+    freeModules = modules
       .filter((m) => m.default_plan === "free")
       .map((m) => ({ organization_id: org.id, module_id: m.id, active: true }));
-    if (freeModules.length > 0) {
-      await admin.from("organization_modules").insert(freeModules);
-    }
+  }
+
+  if (freeModules.length === 0) {
+    // Le catalogue est vide : on l'initialise avec le socle "free".
+    await admin.from("modules").upsert(DEFAULT_FREE_MODULES);
+    freeModules = DEFAULT_FREE_MODULES.map((m) => ({
+      organization_id: org.id,
+      module_id: m.id,
+      active: true,
+    }));
+  }
+
+  if (freeModules.length > 0) {
+    await admin.from("organization_modules").insert(freeModules);
   }
 
   // 4. Abonnement de démarrage.

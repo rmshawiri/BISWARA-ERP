@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getAuthzContext } from "@/server/auth";
 import { createCustomer, updateCustomer, deactivateCustomer } from "./service";
-import { createCustomerSchema } from "./validation";
+import { createCustomerSchema, updateCustomerSchema } from "./validation";
 import type { Result } from "@/lib/result";
 
 export async function createCustomerAction(
@@ -44,4 +44,31 @@ export async function deactivateCustomerAction(
   return res;
 }
 
-export { updateCustomer };
+export async function updateCustomerAction(
+  id: string,
+  form: FormData
+): Promise<Result<unknown>> {
+  const ctx = await getAuthzContext();
+  if (!ctx || ctx.superAdmin || !ctx.organization) {
+    return { ok: false, error: "Authentification requise." };
+  }
+  try {
+    const parsed = updateCustomerSchema.parse({
+      type: form.get("type") || undefined,
+      company: form.get("company") || undefined,
+      firstname: form.get("firstname") || undefined,
+      lastname: form.get("lastname") || undefined,
+      email: form.get("email") || undefined,
+      phone: form.get("phone") || undefined,
+      city: form.get("city") || undefined,
+      country: form.get("country") || undefined,
+      sector: form.get("sector") || undefined,
+      notes: form.get("notes") || undefined,
+    });
+    const res = await updateCustomer(ctx, id, parsed);
+    if (res.ok) revalidatePath("/app/crm");
+    return res;
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Données invalides." };
+  }
+}

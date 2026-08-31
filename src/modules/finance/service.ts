@@ -134,7 +134,7 @@ export async function closeCashSession(
         justification: gap !== 0 ? justification : existing.justification,
         status: "closed",
       })
-      .where(eq(cashSessions.id, sessionId))
+      .where(and(eq(cashSessions.id, sessionId), eq(cashSessions.organizationId, orgId)))
       .returning();
     if (!row) throw new Error("Clôture impossible.");
     await logAudit({

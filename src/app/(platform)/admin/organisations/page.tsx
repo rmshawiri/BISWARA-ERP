@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { listOrganizations } from "@/modules/platform";
 import type { Organization } from "@/db/schema";
+import { OrgActions } from "@/components/feature/platform/admin-org-actions";
 
 export const metadata: Metadata = { title: "Organisations — Admin" };
 
@@ -60,7 +61,8 @@ export default async function AdminOrganizationsPage() {
                     <th className="pb-2 pr-4">Pays</th>
                     <th className="pb-2 pr-4">Forfait</th>
                     <th className="pb-2 pr-4">Statut</th>
-                    <th className="pb-2">Créée le</th>
+                    <th className="pb-2 pr-4">Créée le</th>
+                    <th className="pb-2">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -81,6 +83,9 @@ export default async function AdminOrganizationsPage() {
                       </td>
                       <td className="py-3 text-muted-foreground">
                         {o.createdAt?.toLocaleDateString("fr-FR") ?? "—"}
+                      </td>
+                      <td className="py-3">
+                        <OrgActions orgId={o.id} status={o.status} plan={o.plan} />
                       </td>
                     </tr>
                   ))}

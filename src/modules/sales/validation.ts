@@ -40,7 +40,8 @@ export function computeTotals(
   for (const l of lines) {
     const lineBeforeTax = l.quantity * l.unitPrice;
     subtotal += lineBeforeTax;
-    taxTotal += lineBeforeTax * l.taxRate;
+    // taxRate est un POURCENTAGE (ex : 20 = 20%)
+    taxTotal += lineBeforeTax * (l.taxRate / 100);
   }
   const total = subtotal + taxTotal - discount;
   return { subtotal, taxTotal, discount, total };
