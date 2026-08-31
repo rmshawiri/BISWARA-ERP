@@ -24,8 +24,23 @@ export function GlobalSearch({ className }: { className?: string }) {
   const [items, setItems] = React.useState<Item[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [focus, setFocus] = React.useState(false);
+  const [recent, setRecent] = React.useState<string[]>([]);
   const debounced = useDebounced(query, 250);
   const box = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const saved = localStorage.getItem("bwr_search_recent");
+    if (saved) setRecent(JSON.parse(saved));
+  }, []);
+
+  React.useEffect(() => {
+    if (debounced.trim()) {
+      const next = [debounced.trim(), ...recent.filter((r) => r !== debounced.trim())].slice(0, 5);
+      setRecent(next);
+      localStorage.setItem("bwr_search_recent", JSON.stringify(next));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debounced]);
 
   React.useEffect(() => {
     let active = true;
@@ -55,7 +70,7 @@ export function GlobalSearch({ className }: { className?: string }) {
     return () => document.removeEventListener("mousedown", onDoc);
   }, []);
 
-  const showDropdown = focus && query.trim().length > 0;
+  const showDropdown = focus;
 
   return (
     <div ref={box} className={cn("relative w-full max-w-md", className)}>
@@ -79,7 +94,24 @@ export function GlobalSearch({ className }: { className?: string }) {
 
       {showDropdown && (
         <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md">
-          {items.length === 0 ? (
+          {!query.trim() ? (
+            <div className="p-2">
+              <p className="px-2 pb-1 text-xs font-semibold uppercase text-muted-foreground">Récentes</p>
+              {recent.length === 0 ? (
+                <p className="px-2 py-1.5 text-sm text-muted-foreground">Aucune recherche récente.</p>
+              ) : (
+                recent.map((r) => (
+                  <button
+                    key={r}
+                    onClick={() => { setQuery(r); }}
+                    className="block w-full px-2 py-1.5 text-left text-sm hover:bg-accent"
+                  >
+                    {r}
+                  </button>
+                ))
+              )}
+            </div>
+          ) : items.length === 0 ? (
             <p className="p-4 text-sm text-muted-foreground">Aucun résultat.</p>
           ) : (
             <ul className="max-h-72 overflow-auto">

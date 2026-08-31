@@ -7,12 +7,20 @@ import { UserSettingsForm } from "@/components/feature/settings/user-settings-fo
 import { OrganizationSettingsForm } from "@/components/feature/settings/organization-settings-form";
 import { ModulesActivitiesManager } from "@/components/feature/settings/modules-activities";
 import { BackupManager } from "@/components/feature/settings/backup-manager";
+import { AdvancedSettings } from "@/components/feature/settings/advanced-settings";
 import {
   listModuleCatalog,
   listOrgModules,
   listActivityCatalog,
   listOrgActivities,
 } from "@/modules/activities";
+import {
+  listCurrencies,
+  listPaymentMethods,
+  listApiKeys,
+  listWebhooks,
+} from "@/modules/advanced";
+import type { Currency, PaymentMethod, ApiKey, Webhook } from "@/db/schema";
 
 export const metadata: Metadata = { title: "Paramètres" };
 
@@ -22,12 +30,16 @@ export default async function SettingsPage() {
 
   const org = ctx.organization;
 
-  const [modulesRes, orgModulesRes, activitiesRes, orgActivitiesRes] =
+  const [modulesRes, orgModulesRes, activitiesRes, orgActivitiesRes, currenciesRes, paymentMethodsRes, apiKeysRes, webhooksRes] =
     await Promise.all([
       listModuleCatalog(ctx),
       listOrgModules(ctx),
       listActivityCatalog(ctx),
       listOrgActivities(ctx),
+      listCurrencies(ctx),
+      listPaymentMethods(ctx),
+      listApiKeys(ctx),
+      listWebhooks(ctx),
     ]);
 
   return (
@@ -112,6 +124,15 @@ export default async function SettingsPage() {
           <BackupManager />
         </CardContent>
       </Card>
+
+      {/* Fonctionnalités avancées */}
+      <h2 className="text-lg font-bold">Fonctionnalités avancées</h2>
+      <AdvancedSettings
+        currencies={(currenciesRes.ok ? currenciesRes.data : []).map((c) => ({ id: c.id, code: c.code, name: c.name, rateToKmf: Number(c.rateToKmf), isDefault: c.isDefault }))}
+        paymentMethods={(paymentMethodsRes.ok ? paymentMethodsRes.data : []).map((m) => ({ id: m.id, name: m.name, code: m.code, active: m.active }))}
+        apiKeys={(apiKeysRes.ok ? apiKeysRes.data : []).map((k) => ({ id: k.id, label: k.label, keyText: k.keyText, active: k.active }))}
+        webhooks={(webhooksRes.ok ? webhooksRes.data : []).map((w) => ({ id: w.id, event: w.event, url: w.url, active: w.active }))}
+      />
     </div>
   );
 }

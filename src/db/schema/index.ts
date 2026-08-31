@@ -10,3 +10,4 @@ export * from "./assets";
 export * from "./hr";
 export * from "./projects";
 export * from "./logistics";
+export * from "./advanced";
