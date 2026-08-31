@@ -59,35 +59,40 @@ export async function requireUser() {
  * profil + organisation + permissions résolues.
  */
 export async function getAuthzContext(): Promise<AuthzContext | null> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return null;
 
-  const { data: profile } = await supabase
-    .from(PROFILE_TABLE)
-    .select("*")
-    .eq("id", user.id)
-    .single();
-
-  if (!profile) return null;
-
-  const profileData = profile as UserProfile;
-  const superAdmin = profileData.role === "super_admin";
-
-  let organization: Organization | null = null;
-  if (profileData.organizationId) {
-    const { data: org } = await supabase
-      .from(ORG_TABLE)
+    const { data: profile } = await supabase
+      .from(PROFILE_TABLE)
       .select("*")
-      .eq("id", profileData.organizationId)
+      .eq("id", user.id)
       .single();
-    organization = (org as Organization) ?? null;
-  }
 
-  const permissions = await resolvePermissions(supabase, profileData);
-  return { user: profileData, organization, superAdmin, permissions };
+    if (!profile) return null;
+
+    const profileData = profile as UserProfile;
+    const superAdmin = profileData.role === "super_admin";
+
+    let organization: Organization | null = null;
+    if (profileData.organizationId) {
+      const { data: org } = await supabase
+        .from(ORG_TABLE)
+        .select("*")
+        .eq("id", profileData.organizationId)
+        .single();
+      organization = (org as Organization) ?? null;
+    }
+
+    const permissions = await resolvePermissions(supabase, profileData);
+    return { user: profileData, organization, superAdmin, permissions };
+  } catch (e) {
+    console.error("[bwr-auth] getAuthzContext a échoué :", e);
+    return null;
+  }
 }
 
 /** Accès réservé au Super Admin. */
