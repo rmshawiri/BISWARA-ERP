@@ -7,6 +7,7 @@ import {
   purchaseDocuments,
   purchaseDocumentLines,
   purchaseValidations,
+  stockMovements,
 } from "@/db/schema";
 import type { AuthzContext } from "@/types";
 import { hasPermission } from "@/server/rbac";
@@ -165,5 +166,96 @@ export async function listPurchaseDocuments(
     return ok(result);
   } catch (e) {
     return err(e instanceof Error ? e.message : "Erreur de lecture");
+  }
+}
+
+/** Réceptionne un bon de commande : crée les entrées de stock et valide. */
+export async function receivePurchase(
+  ctx: AuthzContext,
+  documentId: string
+): Promise<Result<typeof purchaseDocuments.$inferSelect>> {
+  requirePerm(ctx, "update");
+  const orgId = ctx.organization!.id;
+  try {
+    const [doc] = await db()
+      .select()
+      .from(purchaseDocuments)
+      .where(and(eq(purchaseDocuments.id, documentId), eq(purchaseDocuments.organizationId, orgId)))
+      .limit(1);
+    if (!doc) return err("Document introuvable.");
+    const lines = await db()
+      .select()
+      .from(purchaseDocumentLines)
+      .where(eq(purchaseDocumentLines.documentId, documentId));
+    const date = new Date().toISOString().slice(0, 10);
+    for (const l of lines) {
+      if (l.productId) {
+        await db().insert(stockMovements).values({
+          organizationId: orgId,
+          productId: l.productId,
+          type: "in",
+          quantity: l.quantity,
+          reference: doc.number,
+          date,
+        });
+      }
+    }
+    const [row] = await db()
+      .update(purchaseDocuments)
+      .set({ status: "received" })
+      .where(and(eq(purchaseDocuments.id, documentId), eq(purchaseDocuments.organizationId, orgId)))
+      .returning();
+    await logAudit({
+      userId: ctx.user.id,
+      userName: ctx.user.fullName,
+      organizationId: orgId,
+      module: MODULES.PURCHASES,
+      action: "purchase.receive",
+      entityType: "purchase_document",
+      entityId: documentId,
+    });
+    return ok(row!);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de réception");
+  }
+}
+
+/** Décide d'une validation d'achat (approuver / rejeter). */
+export async function decidePurchaseValidation(
+  ctx: AuthzContext,
+  documentId: string,
+  decision: "approved" | "rejected",
+  comment?: string
+): Promise<Result<typeof purchaseDocuments.$inferSelect>> {
+  requirePerm(ctx, "update");
+  const orgId = ctx.organization!.id;
+  try {
+    const [doc] = await db()
+      .select()
+      .from(purchaseDocuments)
+      .where(and(eq(purchaseDocuments.id, documentId), eq(purchaseDocuments.organizationId, orgId)))
+      .limit(1);
+    if (!doc) return err("Document introuvable.");
+    await db()
+      .update(purchaseValidations)
+      .set({ decision, validatorId: ctx.user.id, comment: comment ?? null })
+      .where(eq(purchaseValidations.documentId, documentId));
+    const [row] = await db()
+      .update(purchaseDocuments)
+      .set({ status: decision === "approved" ? "validated" : "rejected" })
+      .where(and(eq(purchaseDocuments.id, documentId), eq(purchaseDocuments.organizationId, orgId)))
+      .returning();
+    await logAudit({
+      userId: ctx.user.id,
+      userName: ctx.user.fullName,
+      organizationId: orgId,
+      module: MODULES.PURCHASES,
+      action: `purchase.${decision}`,
+      entityType: "purchase_document",
+      entityId: documentId,
+    });
+    return ok(row!);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de décision");
   }
 }

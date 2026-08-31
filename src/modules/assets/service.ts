@@ -1,6 +1,6 @@
 import "server-only";
 
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { db } from "@/db";
 import { assets } from "@/db/schema";
 import type { AuthzContext } from "@/types";
@@ -84,4 +84,35 @@ export function amortizationFor(asset: {
     usefulLife: Number(asset.usefulLife),
     residualValue: Number(asset.residualValue ?? 0),
   });
+}
+
+/** Sort un actif (vente / réforme / perte / vol / don). */
+export async function disposeAsset(
+  ctx: AuthzContext,
+  id: string,
+  reason: string
+): Promise<Result<typeof assets.$inferSelect>> {
+  requirePerm(ctx, "update");
+  const orgId = ctx.organization!.id;
+  try {
+    const [row] = await db()
+      .update(assets)
+      .set({ status: "disposed", notes: `${reason}\n${Date.now().toString()}` })
+      .where(and(eq(assets.id, id), eq(assets.organizationId, orgId)))
+      .returning();
+    if (!row) return err("Actif introuvable.");
+    await logAudit({
+      userId: ctx.user.id,
+      userName: ctx.user.fullName,
+      organizationId: orgId,
+      module: MODULES.ASSETS,
+      action: "asset.dispose",
+      entityType: "asset",
+      entityId: id,
+      newValue: { status: "disposed", reason },
+    });
+    return ok(row);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de sortie");
+  }
 }

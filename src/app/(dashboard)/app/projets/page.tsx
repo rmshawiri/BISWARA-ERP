@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getAuthzContext } from "@/server/auth";
-import { listProjects, isOverdue } from "@/modules/projects";
-import type { Project } from "@/db/schema";
+import { listProjects, listTasks, isOverdue } from "@/modules/projects";
+import type { Project, ProjectTask } from "@/db/schema";
 import { NewProjectButton } from "@/components/feature/projects/new-project-button";
+import { TasksManager } from "@/components/feature/projects/tasks-manager";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FolderKanban } from "lucide-react";
@@ -15,10 +16,15 @@ export default async function ProjetsPage() {
   if (!ctx || ctx.superAdmin) redirect("/login");
 
   let projects: Project[] = [];
+  const tasksByProject: Record<string, ProjectTask[]> = {};
   let dbReady = true;
   try {
     const res = await listProjects(ctx);
     if (res.ok) projects = res.data;
+    for (const p of projects) {
+      const t = await listTasks(ctx, p.id);
+      if (t.ok) tasksByProject[p.id] = t.data;
+    }
   } catch {
     dbReady = false;
   }
@@ -80,6 +86,26 @@ export default async function ProjetsPage() {
           );
         })}
       </div>
+
+      {projects.length > 0 && (
+        <div className="space-y-4">
+          {projects.map((p) => (
+            <TasksManager
+              key={p.id}
+              projectId={p.id}
+              projectName={p.name}
+              tasks={(tasksByProject[p.id] ?? []).map((t) => ({
+                id: t.id,
+                title: t.title,
+                progress: t.progress,
+                done: t.done,
+                status: t.status,
+                dueDate: t.dueDate,
+              }))}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

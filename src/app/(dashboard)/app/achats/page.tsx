@@ -5,6 +5,7 @@ import { listSuppliers, listPurchaseDocuments } from "@/modules/purchasing";
 import type { Supplier, PurchaseDocument } from "@/db/schema";
 import { NewSupplierButton } from "@/components/feature/purchasing/new-supplier-button";
 import { NewPurchaseDocumentButton } from "@/components/feature/purchasing/new-purchase-document-button";
+import { PurchaseActions } from "@/components/feature/purchasing/purchase-actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingBag, Truck } from "lucide-react";
@@ -101,7 +102,8 @@ export default async function AchatsPage() {
                       <th className="pb-2 pr-4">Fournisseur</th>
                       <th className="pb-2 pr-4">Type</th>
                       <th className="pb-2 pr-4">Statut</th>
-                      <th className="pb-2">Total</th>
+                      <th className="pb-2 pr-4">Total</th>
+                      <th className="pb-2">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -121,6 +123,9 @@ export default async function AchatsPage() {
                         </td>
                         <td className="py-3 font-semibold tabular-nums">
                           {formatCurrency(Number(d.total), currency)}
+                        </td>
+                        <td className="py-3">
+                          <PurchaseActions id={d.id} status={d.status} />
                         </td>
                       </tr>
                     ))}

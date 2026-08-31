@@ -10,6 +10,7 @@ import {
 import type { Product, StockMovement, Warehouse } from "@/db/schema";
 import { NewStockMovementButton, type MovementOption } from "@/components/feature/stock/new-stock-movement-button";
 import { NewWarehouseButton } from "@/components/feature/stock/new-warehouse-button";
+import { TransferButton } from "@/components/feature/stock/transfer-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Boxes, Package, Warehouse as WarehouseIcon } from "lucide-react";
@@ -82,6 +83,7 @@ export default async function StockPage() {
             warehouses={warehouseOptions}
           />
           <NewWarehouseButton />
+          <TransferButton products={movementOptions} warehouses={warehouseOptions} />
         </div>
       </div>
 

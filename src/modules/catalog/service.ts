@@ -2,7 +2,7 @@ import "server-only";
 
 import { eq, and } from "drizzle-orm";
 import { db } from "@/db";
-import { products, productCategories } from "@/db/schema";
+import { products, productCategories, units, taxes, brands } from "@/db/schema";
 import type { AuthzContext } from "@/types";
 import { hasPermission } from "@/server/rbac";
 import { logAudit } from "@/engines/audit";
@@ -184,6 +184,77 @@ export async function createCategory(
       entityId: row.id,
       newValue: { name: row.name },
     });
+    return ok(row);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de création");
+  }
+}
+
+/* ---- Référentiels : unités, taxes, marques (tables orphelines câblées) ---- */
+
+export async function listUnits(ctx: AuthzContext) {
+  requirePerm(ctx, "view");
+  const orgId = ctx.organization!.id;
+  try {
+    const rows = await db().select().from(units).where(eq(units.organizationId, orgId));
+    return ok(rows);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de lecture");
+  }
+}
+
+export async function createUnit(ctx: AuthzContext, name: string, symbol?: string) {
+  requirePerm(ctx, "create");
+  const orgId = ctx.organization!.id;
+  try {
+    const [row] = await db().insert(units).values({ organizationId: orgId, name, symbol: symbol ?? null }).returning();
+    if (!row) return err("Création impossible.");
+    return ok(row);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de création");
+  }
+}
+
+export async function listTaxes(ctx: AuthzContext) {
+  requirePerm(ctx, "view");
+  const orgId = ctx.organization!.id;
+  try {
+    const rows = await db().select().from(taxes).where(eq(taxes.organizationId, orgId));
+    return ok(rows);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de lecture");
+  }
+}
+
+export async function createTax(ctx: AuthzContext, name: string, rate: number) {
+  requirePerm(ctx, "create");
+  const orgId = ctx.organization!.id;
+  try {
+    const [row] = await db().insert(taxes).values({ organizationId: orgId, name, rate }).returning();
+    if (!row) return err("Création impossible.");
+    return ok(row);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de création");
+  }
+}
+
+export async function listBrands(ctx: AuthzContext) {
+  requirePerm(ctx, "view");
+  const orgId = ctx.organization!.id;
+  try {
+    const rows = await db().select().from(brands).where(eq(brands.organizationId, orgId));
+    return ok(rows);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de lecture");
+  }
+}
+
+export async function createBrand(ctx: AuthzContext, name: string) {
+  requirePerm(ctx, "create");
+  const orgId = ctx.organization!.id;
+  try {
+    const [row] = await db().insert(brands).values({ organizationId: orgId, name }).returning();
+    if (!row) return err("Création impossible.");
     return ok(row);
   } catch (e) {
     return err(e instanceof Error ? e.message : "Erreur de création");

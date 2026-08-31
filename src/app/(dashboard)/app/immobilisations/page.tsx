@@ -4,6 +4,7 @@ import { getAuthzContext } from "@/server/auth";
 import { listAssets, amortizationFor } from "@/modules/assets";
 import type { Asset } from "@/db/schema";
 import { NewAssetButton } from "@/components/feature/assets/new-asset-button";
+import { DisposeAssetButton } from "@/components/feature/assets/dispose-asset-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Landmark } from "lucide-react";
@@ -85,7 +86,8 @@ export default async function ImmobilisationsPage() {
                     <th className="pb-2 pr-4">Coût</th>
                     <th className="pb-2 pr-4">Amort./an</th>
                     <th className="pb-2 pr-4">Méthode</th>
-                    <th className="pb-2">Statut</th>
+                    <th className="pb-2 pr-4">Statut</th>
+                    <th className="pb-2">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -110,6 +112,9 @@ export default async function ImmobilisationsPage() {
                           <Badge variant={a.status === "active" ? "success" : "warning"}>
                             {a.status === "active" ? "En service" : a.status}
                           </Badge>
+                        </td>
+                        <td className="py-3">
+                          {a.status === "active" && <DisposeAssetButton id={a.id} />}
                         </td>
                       </tr>
                     );

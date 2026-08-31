@@ -132,3 +132,52 @@ export async function stockLevels(
     return err(e instanceof Error ? e.message : "Erreur de lecture");
   }
 }
+
+/** Transfert entre deux dépôts (mouvement sortie + entrée). */
+export async function recordTransfer(
+  ctx: AuthzContext,
+  input: {
+    productId: string;
+    fromWarehouseId: string;
+    toWarehouseId: string;
+    quantity: number;
+    reference?: string | null;
+  }
+): Promise<Result<boolean>> {
+  requirePerm(ctx, "create");
+  const orgId = ctx.organization!.id;
+  try {
+    const date = new Date().toISOString().slice(0, 10);
+    await db().insert(stockMovements).values({
+      organizationId: orgId,
+      productId: input.productId,
+      warehouseId: input.fromWarehouseId,
+      type: "out",
+      quantity: input.quantity,
+      reference: input.reference ?? null,
+      date,
+    });
+    await db().insert(stockMovements).values({
+      organizationId: orgId,
+      productId: input.productId,
+      warehouseId: input.toWarehouseId,
+      type: "in",
+      quantity: input.quantity,
+      reference: input.reference ?? null,
+      date,
+    });
+    await logAudit({
+      userId: ctx.user.id,
+      userName: ctx.user.fullName,
+      organizationId: orgId,
+      module: MODULES.STOCK,
+      action: "movement.transfer",
+      entityType: "stock_movement",
+      entityId: input.productId,
+      newValue: { from: input.fromWarehouseId, to: input.toWarehouseId, qty: input.quantity },
+    });
+    return ok(true);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de transfert");
+  }
+}

@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getAuthzContext } from "@/server/auth";
-import { listProducts, listCategories } from "@/modules/catalog";
-import type { Product, ProductCategory } from "@/db/schema";
+import { listProducts, listCategories, listUnits, listTaxes, listBrands } from "@/modules/catalog";
+import type { Product, ProductCategory, Unit, Tax, Brand } from "@/db/schema";
 import { NewProductButton } from "@/components/feature/catalog/new-product-button";
+import { Referentials } from "@/components/feature/catalog/referentials";
 import {
   Card,
   CardContent,
@@ -23,6 +24,9 @@ export default async function CataloguePage() {
   const currency = ctx.organization?.currency ?? "KMF";
   let products: Product[] = [];
   let categories: ProductCategory[] = [];
+  let units: Unit[] = [];
+  let taxes: Tax[] = [];
+  let brands: Brand[] = [];
   let dbReady = true;
 
   try {
@@ -30,6 +34,12 @@ export default async function CataloguePage() {
     if (p.ok) products = p.data;
     const c = await listCategories(ctx);
     if (c.ok) categories = c.data;
+    const u = await listUnits(ctx);
+    if (u.ok) units = u.data;
+    const t = await listTaxes(ctx);
+    if (t.ok) taxes = t.data;
+    const b = await listBrands(ctx);
+    if (b.ok) brands = b.data;
   } catch {
     dbReady = false;
   }
@@ -125,6 +135,12 @@ export default async function CataloguePage() {
           </CardContent>
         </Card>
       </div>
+
+      <Referentials
+        units={units.map((u) => ({ id: u.id, name: u.name, symbol: u.symbol }))}
+        taxes={taxes.map((t) => ({ id: t.id, name: t.name, rate: Number(t.rate) }))}
+        brands={brands.map((b) => ({ id: b.id, name: b.name }))}
+      />
     </div>
   );
 }

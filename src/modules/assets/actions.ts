@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getAuthzContext } from "@/server/auth";
-import { createAsset } from "./service";
+import { createAsset, disposeAsset } from "./service";
 import type { Result } from "@/lib/result";
 
 export async function createAssetAction(
@@ -38,4 +38,16 @@ export async function createAssetAction(
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Données invalides." };
   }
+}
+
+export async function disposeAssetAction(
+  id: string,
+  reason: string
+): Promise<Result<unknown>> {
+  const ctx = await getAuthzContext();
+  if (!ctx || ctx.superAdmin || !ctx.organization)
+    return { ok: false, error: "Authentification requise." };
+  const res = await disposeAsset(ctx, id, reason);
+  if (res.ok) revalidatePath("/app/immobilisations");
+  return res;
 }
