@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { PlanCards } from "@/components/feature/pricing/plan-cards";
+import { PricingCards } from "@/components/marketing/pricing-cards";
+import { Reveal } from "@/components/motion/reveal";
 
 export const metadata: Metadata = {
   title: "Tarifs — BISWARA ERP",
@@ -9,17 +10,26 @@ export const metadata: Metadata = {
 
 export default function PricingPage() {
   return (
-    <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-2xl text-center">
-        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-          Des tarifs simples et transparents
-        </h1>
-        <p className="mt-4 text-muted-foreground">
-          Choisissez le forfait adapté à votre activité. Changez de forfait à
-          tout moment, vos données sont conservées.
-        </p>
+    <div className="relative overflow-hidden">
+      {/* Lueur d'en-tête */}
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(ellipse_70%_100%_at_50%_0%,rgba(124,92,255,0.18),transparent_70%)]"
+        aria-hidden="true"
+      />
+      <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
+        <Reveal className="mx-auto max-w-2xl text-center">
+          <span className="aurora-tag">Tarifs</span>
+          <h1 className="mt-6 font-display text-3xl font-bold tracking-tight text-white sm:text-5xl">
+            Des tarifs simples et{" "}
+            <span className="aurora-gradient-text">transparents</span>
+          </h1>
+          <p className="mt-5 text-lg text-[var(--aurora-muted)]">
+            Choisissez le forfait adapté à votre activité. Changez de forfait à
+            tout moment, vos données sont conservées.
+          </p>
+        </Reveal>
+        <PricingCards className="mt-14" />
       </div>
-      <PlanCards className="mt-12" />
     </div>
   );
 }

@@ -1,63 +1,107 @@
 import type { Metadata } from "next";
-import { Mail, Phone, MessageCircle } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { buildWhatsAppLink, demoMessage } from "@/lib/whatsapp";
+import { Mail, Phone, MessageCircle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Reveal } from "@/components/motion/reveal";
+import { buildWhatsAppLink, demoMessage } from "@/lib/whatsapp";
+import { siteConfig } from "@/lib/config";
 
 export const metadata: Metadata = {
   title: "Contact — BISWARA ERP",
   description: "Contactez l'équipe BISWARA (MORA Shawiri).",
 };
 
+const contactMethods = [
+  {
+    Icon: Phone,
+    label: "Téléphone / WhatsApp",
+    value: siteConfig.whatsappNumber,
+    accent: "text-[var(--bwr-cyan,#22d3ee)]",
+    bg: "border-[rgba(34,211,238,0.2)] bg-[rgba(34,211,238,0.1)]",
+    href: buildWhatsAppLink(demoMessage()),
+  },
+  {
+    Icon: MessageCircle,
+    label: "WhatsApp Business",
+    value: "Écrire sur WhatsApp",
+    accent: "text-[var(--bwr-green,#34d399)]",
+    bg: "border-[rgba(52,211,153,0.2)] bg-[rgba(52,211,153,0.1)]",
+    href: buildWhatsAppLink(demoMessage()),
+  },
+  {
+    Icon: Mail,
+    label: "E-mail",
+    value: "contact@biswara.app",
+    accent: "text-[var(--bwr-violet,#7c5cff)]",
+    bg: "border-[rgba(255,78,205,0.2)] bg-[rgba(255,78,205,0.1)]",
+    href: "mailto:contact@biswara.app",
+  },
+];
+
 export default function ContactPage() {
+  const waDemo = buildWhatsAppLink(demoMessage());
   return (
-    <div className="mx-auto max-w-4xl px-4 py-20 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-2xl text-center">
-        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Contact</h1>
-        <p className="mt-4 text-muted-foreground">
-          Une question, une démonstration ? Nous sommes à votre écoute.
-        </p>
-      </div>
-      <div className="mt-12 grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardContent className="flex flex-col items-center gap-3 p-6 text-center">
-            <div className="rounded-lg bg-biswara-blue/10 p-2.5 text-biswara-blue">
-              <Phone className="h-5 w-5" />
-            </div>
-            <p className="text-sm font-medium">Téléphone</p>
-            <p className="text-sm text-muted-foreground">+269 430 63 06</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex flex-col items-center gap-3 p-6 text-center">
-            <div className="rounded-lg bg-biswara-green/10 p-2.5 text-biswara-green">
-              <MessageCircle className="h-5 w-5" />
-            </div>
-            <p className="text-sm font-medium">WhatsApp</p>
-            <a
-              href={buildWhatsAppLink(demoMessage())}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-primary hover:underline"
-            >
-              Écrire sur WhatsApp
+    <div className="relative overflow-hidden">
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(ellipse_70%_100%_at_50%_0%,rgba(255,78,205,0.18),transparent_70%)]"
+        aria-hidden="true"
+      />
+      <div className="relative mx-auto max-w-4xl px-4 py-24 sm:px-6 lg:px-8">
+        <Reveal className="mx-auto max-w-2xl text-center">
+          <span className="aurora-tag">Contact</span>
+          <h1 className="mt-6 font-display text-3xl font-bold tracking-tight text-white sm:text-5xl">
+            Parlons de <span className="aurora-gradient-text">votre projet</span>
+          </h1>
+          <p className="mt-5 text-lg text-[var(--aurora-muted)]">
+            Une question, une démonstration ? Notre équipe vous répond sous 24 h.
+          </p>
+        </Reveal>
+
+        <div className="mt-14 grid gap-5 sm:grid-cols-3">
+          {contactMethods.map((c, i) => {
+            const isMail = c.href.startsWith("mailto:");
+            return (
+              <Reveal key={c.label} delay={i * 100}>
+                <a
+                  href={c.href}
+                  target={isMail ? undefined : "_blank"}
+                  rel={isMail ? undefined : "noopener noreferrer"}
+                  className="block h-full rounded-2xl border border-white/10 bg-white/[0.03] p-7 text-center backdrop-blur-md transition-all duration-500 hover:-translate-y-1 hover:border-white/25 hover:bg-white/[0.06]"
+                >
+                  <div className={`mx-auto grid h-14 w-14 place-items-center rounded-2xl border ${c.bg} ${c.accent}`}>
+                    <c.Icon className="h-6 w-6" />
+                  </div>
+                  <p className="mt-5 font-display text-base font-semibold text-white">{c.label}</p>
+                  <p className={`mt-1.5 text-sm ${c.accent}`}>{c.value}</p>
+                </a>
+              </Reveal>
+            );
+          })}
+        </div>
+
+        <Reveal delay={200} className="mt-10">
+          <div className="relative overflow-hidden rounded-[24px] border border-white/10 bg-white/[0.03] p-8 text-center backdrop-blur-xl sm:p-10">
+            <div
+              className="pointer-events-none absolute inset-0 -z-10"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(124,92,255,0.25), transparent 60%), radial-gradient(circle at 80% 20%, rgba(34,211,238,0.2), transparent 55%)",
+              }}
+            />
+            <h2 className="font-display text-2xl font-bold text-white">
+              Besoin d'une démonstration ?
+            </h2>
+            <p className="mx-auto mt-3 max-w-lg text-[var(--aurora-muted)]">
+              Écrivez-nous sur WhatsApp et notre équipe vous présente BISWARA adapté à votre secteur.
+            </p>
+            <a href={waDemo} target="_blank" rel="noopener noreferrer" className="mt-6 inline-block">
+              <Button size="lg" className="buttons-aurora-grad text-white shadow-[0_12px_40px_rgba(124,92,255,0.4)] hover:opacity-95">
+                <MessageCircle className="h-4 w-4" />
+                Demander une démonstration
+                <ArrowRight className="h-4 w-4" />
+              </Button>
             </a>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex flex-col items-center gap-3 p-6 text-center">
-            <div className="rounded-lg bg-biswara-gold/10 p-2.5 text-biswara-gold-700">
-              <Mail className="h-5 w-5" />
-            </div>
-            <p className="text-sm font-medium">E-mail</p>
-            <p className="text-sm text-muted-foreground">contact@biswara.app</p>
-          </CardContent>
-        </Card>
-      </div>
-      <div className="mt-8 flex justify-center">
-        <a href={buildWhatsAppLink(demoMessage())} target="_blank" rel="noopener noreferrer">
-          <Button>Demander une démonstration</Button>
-        </a>
+          </div>
+        </Reveal>
       </div>
     </div>
   );

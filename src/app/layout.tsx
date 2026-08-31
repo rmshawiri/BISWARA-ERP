@@ -1,7 +1,20 @@
 import type { Metadata, Viewport } from "next";
+import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/providers/providers";
 import { siteConfig } from "@/lib/config";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+});
 
 function safeBaseUrl(): URL | undefined {
   try {
@@ -60,7 +73,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="fr" suppressHydrationWarning>
-      <body className="font-sans antialiased">
+      <body className={`${inter.variable} ${spaceGrotesk.variable} font-sans antialiased`}>
         <Providers>{children}</Providers>
       </body>
     </html>

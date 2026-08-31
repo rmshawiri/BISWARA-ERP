@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { PublicNavbar } from "@/components/layout/public-navbar";
 import { PublicFooter } from "@/components/layout/public-footer";
+import { ScrollChrome } from "@/components/marketing/scroll-chrome";
 import { siteConfig } from "@/lib/config";
 
 export const metadata: Metadata = {
@@ -15,9 +16,10 @@ export default function PublicLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="dark relative flex min-h-screen flex-col bg-[#05060f] text-[var(--aurora-ink)] antialiased">
       <PublicNavbar />
-      <main className="flex-1">{children}</main>
+      <ScrollChrome />
+      <main className="relative flex-1">{children}</main>
       <PublicFooter />
     </div>
   );

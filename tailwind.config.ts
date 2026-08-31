@@ -12,20 +12,22 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Famille de marque BISWARA (interface) — indigo / violet / cyan
+        // Famille de marque BISWARA — palette « aurora » de référence
+        // (violet #7c5cff → cyan #22d3ee → rose #ff4ecd).
+        // Les noms de classes restent inchangés ; seules les valeurs suivent la référence.
         biswara: {
           blue: {
-            DEFAULT: "#6366F1",
-            50: "#EEF2FF",
-            100: "#E0E7FF",
-            200: "#C7D2FE",
-            300: "#A5B4FC",
-            400: "#818CF8",
-            500: "#6366F1",
-            600: "#4F46E5",
-            700: "#4338CA",
-            800: "#3730A3",
-            900: "#312E81",
+            DEFAULT: "#7C5CFF",
+            50: "#F5F3FF",
+            100: "#EDE9FE",
+            200: "#DDD6FE",
+            300: "#C4B5FD",
+            400: "#A78BFA",
+            500: "#7C5CFF",
+            600: "#6D3BE8",
+            700: "#5B31C7",
+            800: "#4A289E",
+            900: "#3C2278",
           },
           gold: {
             DEFAULT: "#F59E0B",
@@ -54,14 +56,14 @@ const config: Config = {
             900: "#064E3B",
           },
           violet: {
-            DEFAULT: "#8B5CF6",
-            500: "#8B5CF6",
-            600: "#7C3AED",
+            DEFAULT: "#FF4ECD",
+            500: "#FF4ECD",
+            600: "#F231B8",
           },
           cyan: {
-            DEFAULT: "#06B6D4",
-            500: "#06B6D4",
-            600: "#0891B2",
+            DEFAULT: "#22D3EE",
+            500: "#22D3EE",
+            600: "#0EB8D6",
           },
         },
         // Tokens sémantiques (HSL from CSS variables)
@@ -89,11 +91,12 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        display: ["var(--font-display)", "var(--font-sans)", "sans-serif"],
       },
       boxShadow: {
         soft: "var(--shadow-soft)",
         card: "0 1px 2px rgba(15,23,42,.04), 0 10px 30px -10px rgba(15,23,42,.12)",
-        brand: "0 8px 24px -10px rgba(99,102,241,.55)",
+        brand: "0 8px 24px -10px rgba(124,92,255,.55)",
       },
       keyframes: {
         "accordion-down": { from: { height: "0" }, to: { height: "var(--radix-accordion-content-height)" } },

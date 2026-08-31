@@ -80,7 +80,7 @@ export default function LoginPage() {
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       {/* Panneau de marque */}
-      <div className="relative hidden overflow-hidden bg-gradient-to-br from-indigo-700 via-violet-700 to-indigo-900 text-white lg:flex lg:flex-col lg:justify-between lg:p-12">
+      <div className="relative hidden overflow-hidden bg-gradient-to-br from-[#5b35c7] via-[#7c5cff] to-[#31217f] text-white lg:flex lg:flex-col lg:justify-between lg:p-12">
         <div className="pointer-events-none absolute inset-0 opacity-30 [background:radial-gradient(50%_50%_at_80%_10%,rgba(255,255,255,0.4),transparent)]" />
         <Link href="/" className="relative">
           <BiswaraLogo variant="dark" />

@@ -96,8 +96,8 @@ export function AppShell({ user, organization, children }: AppShellProps) {
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar desktop */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 flex-col overflow-hidden bg-gradient-to-b from-indigo-950 via-[#1a1440] to-slate-950 text-white lg:flex">
-        <div className="pointer-events-none absolute inset-0 opacity-40 [background:radial-gradient(60%_50%_at_50%_-10%,rgba(99,102,241,0.4),transparent)]" />
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 flex-col overflow-hidden bg-gradient-to-b from-[#12103a] via-[#1c1454] to-[#05060f] text-white lg:flex">
+        <div className="pointer-events-none absolute inset-0 opacity-40 [background:radial-gradient(60%_50%_at_50%_-10%,rgba(124,92,255,0.4),transparent),radial-gradient(50%_40%_at_100%_100%,rgba(34,211,238,0.18),transparent)]" />
         <div className="relative flex h-16 items-center border-b border-white/8 px-5">
           <BiswaraLogo variant="dark" />
         </div>
@@ -133,7 +133,7 @@ export function AppShell({ user, organization, children }: AppShellProps) {
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-          <div className="absolute inset-y-0 left-0 flex w-72 flex-col bg-gradient-to-b from-indigo-950 via-[#1a1440] to-slate-950 text-white">
+          <div className="absolute inset-y-0 left-0 flex w-72 flex-col bg-gradient-to-b from-[#12103a] via-[#1c1454] to-[#05060f] text-white">
             <div className="flex h-16 items-center justify-between border-b border-white/8 px-5">
               <BiswaraLogo variant="dark" />
               <button onClick={() => setMobileOpen(false)} aria-label="Fermer" className="text-white/60 hover:text-white">

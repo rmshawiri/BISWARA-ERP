@@ -7,6 +7,27 @@
     /* Palette BISWARA — identité visuelle moderne (indigo/violet/cyan) */
     --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
       Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-display: "Space Grotesk", "Inter", ui-sans-serif, system-ui,
+      -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+    /* Direction artistique « aurora nocturne » — surfaces & textes sombres */
+    --aurora-bg: #05060f;
+    --aurora-ink: #f2f5ff;
+    --aurora-muted: #a8aecb;
+    --aurora-faint: #646b8d;
+    --aurora-glass-bg: rgba(255, 255, 255, 0.045);
+    --aurora-glass-bg-strong: rgba(255, 255, 255, 0.07);
+    --aurora-glass-border: rgba(255, 255, 255, 0.09);
+    --aurora-grad: linear-gradient(120deg, #7c5cff 0%, #22d3ee 50%, #ff4ecd 100%);
+    --aurora-grad-full: linear-gradient(120deg, #7c5cff 0%, #22d3ee 45%, #ff4ecd 70%, #7c5cff 100%);
+    --aurora-grad-text: linear-gradient(110deg, #a08cff 0%, #22d3ee 45%, #ff4ecd 90%);
+
+    /* Couleurs d'accent BISWARA — palette « aurora » de référence (violet/c/rose) */
+    --bwr-violet: #7c5cff;
+    --bwr-cyan: #22d3ee;
+    --bwr-pink: #ff4ecd;
+    --bwr-gold: #fbbf24;
+    --bwr-green: #34d399;
 
     --background: 210 40% 98%; /* slate-50 */
     --foreground: 224 71% 4%; /* slate-950 */
@@ -15,30 +36,30 @@
     --popover: 0 0% 100%;
     --popover-foreground: 224 71% 4%;
 
-    --primary: 243 75% 59%; /* indigo-500 */
+    --primary: 252 100% 68%; /* violet de référence #7c5cff */
     --primary-foreground: 0 0% 100%;
-    --primary-deep: 243 75% 45%;
+    --primary-deep: 252 100% 54%;
     --secondary: 220 14% 96%; /* slate-100 */
     --secondary-foreground: 224 71% 8%;
     --muted: 215 20% 94%;
     --muted-foreground: 219 11% 46%;
-    --accent: 243 75% 96%;
-    --accent-foreground: 243 75% 35%;
+    --accent: 252 100% 96%;
+    --accent-foreground: 252 100% 35%;
     --destructive: 349 80% 55%; /* rose-500 */
     --destructive-foreground: 0 0% 100%;
 
     --success: 152 76% 40%; /* emerald-600 */
     --warning: 38 92% 50%; /* amber-500 */
-    --info: 188 86% 43%; /* cyan-500 */
+    --info: 188 86% 53%; /* cyan-500 #22d3ee */
 
     --border: 220 15% 90%;
     --input: 220 15% 88%;
-    --ring: 243 75% 59%;
+    --ring: 252 100% 68%;
 
     --radius: 0.75rem;
 
-    /* nuages dégradés */
-    --grad-brand: linear-gradient(135deg, #6366f1 0%, #8b5cf6 55%, #06b6d4 100%);
+    /* dégradé de marque — violet → cyan → rose (référence) */
+    --grad-brand: linear-gradient(135deg, #7c5cff 0%, #22d3ee 55%, #ff4ecd 100%);
     --shadow-soft: 0 1px 2px rgba(15, 23, 42, 0.04),
       0 4px 16px rgba(15, 23, 42, 0.06);
   }
@@ -51,25 +72,25 @@
     --popover: 224 30% 9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 239 84% 67%; /* indigo-400 */
+    --primary: 252 100% 70%; /* violet de référence (clair) */
     --primary-foreground: 226 40% 8%;
-    --primary-deep: 243 75% 60%;
+    --primary-deep: 252 100% 60%;
     --secondary: 220 20% 15%;
     --secondary-foreground: 210 40% 98%;
     --muted: 218 20% 16%;
     --muted-foreground: 215 20% 65%;
-    --accent: 243 40% 22%;
+    --accent: 252 40% 24%;
     --accent-foreground: 210 40% 92%;
     --destructive: 350 70% 55%;
     --destructive-foreground: 0 0% 98%;
 
     --success: 152 76% 45%;
     --warning: 38 92% 55%;
-    --info: 188 86% 50%;
+    --info: 188 86% 53%;
 
     --border: 217 33% 22%;
     --input: 217 33% 22%;
-    --ring: 239 84% 67%;
+    --ring: 252 100% 70%;
 
     --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.4),
       0 8px 24px rgba(0, 0, 0, 0.4);
@@ -143,6 +164,134 @@
   .animate-in-up {
     animation: bwr-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
+}
+
+@layer components {
+  /* ====================================================================
+     DIRECTION ARTISTIQUE « AURORA NOCTURNE » (marketing & premium)
+     ==================================================================== */
+
+  /* Surface en verre sombre (glassmorphism) — variante aurora */
+  .aurora-surface {
+    background: var(--aurora-glass-bg);
+    border: 1px solid var(--aurora-glass-border);
+    backdrop-filter: blur(16px) saturate(1.2);
+    -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  }
+
+  .aurora-surface-strong {
+    background: var(--aurora-glass-bg-strong);
+    border: 1px solid var(--aurora-glass-border);
+    backdrop-filter: blur(20px) saturate(1.2);
+    -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  }
+
+  /* Texte en dégradé animé (indigo → violet → cyan) */
+  .aurora-gradient-text {
+    background: var(--aurora-grad-text);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: aurora-gradient-shift 6s ease-in-out infinite;
+  }
+
+  /* Bouton dégradé aurora avec reflet balayant */
+  .buttons-aurora-grad {
+    background: var(--aurora-grad);
+    background-size: 180% 180%;
+  }
+
+  /* Pastille dégradée de marque (icônes) */
+  .aurora-chip {
+    background: linear-gradient(140deg, rgba(124, 92, 255, 0.18), rgba(34, 211, 238, 0.12));
+    border: 1px solid rgba(124, 92, 255, 0.3);
+  }
+
+  /* Étiquette de section (pillule avec point pulsant) */
+  .aurora-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--aurora-ink);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--aurora-glass-border);
+    border-radius: 999px;
+    padding: 0.45rem 1rem;
+  }
+
+  .aurora-tag::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--bwr-cyan, #22d3ee);
+    box-shadow: 0 0 12px rgba(34, 211, 238, 0.9);
+    animation: aurora-pulse-dot 2s ease-in-out infinite;
+  }
+
+  /* Grille lumineuse de fond (hero) */
+  .bg-grid-fade {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    background-size: 56px 56px;
+    -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, #000 30%, transparent 75%);
+    mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, #000 30%, transparent 75%);
+  }
+
+  /* Masque en fondu horizontal (marquee) */
+  .mask-fade-x {
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  }
+}
+
+/* ====================================================================
+   KEYFRAMES AURORA
+   ==================================================================== */
+@keyframes aurora-gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes aurora-drift {
+  0%   { transform: translate(0, 0) scale(1) rotate(0deg); }
+  50%  { transform: translate(4%, 6%) scale(1.15) rotate(18deg); }
+  100% { transform: translate(-3%, -5%) scale(0.95) rotate(-14deg); }
+}
+
+@keyframes aurora-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes aurora-pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+@keyframes aurora-ping {
+  0% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.55); }
+  70% { box-shadow: 0 0 0 9px rgba(34, 211, 238, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(34, 211, 238, 0); }
+}
+
+@keyframes aurora-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+
+@keyframes aurora-wheel {
+  0% { opacity: 1; transform: translateY(0); }
+  70% { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 0; transform: translateY(0); }
 }
 
 @keyframes bwr-in-up {
