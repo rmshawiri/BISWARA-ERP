@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import {
   ArrowRight,
-  BarChart3,
   Boxes,
   CreditCard,
   Package,
@@ -20,6 +19,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { KpiCard } from "@/components/feature/dashboard/kpi-card";
 import { formatCurrency } from "@/lib/utils";
+import { db } from "@/db";
+import { salesDocuments, products, customers, payments } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
+import type { LucideIcon } from "lucide-react";
 
 export const metadata: Metadata = { title: "Tableau de bord" };
 
@@ -30,6 +33,44 @@ const recent = [
   { icon: Package, text: "Stock : 8 produits sous le seuil", meta: "Il y a 2 h", tone: "amber" },
 ];
 
+type Tone = "primary" | "violet" | "cyan" | "green" | "amber" | "rose";
+type StatsItem = {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  tone: Tone;
+  change?: { value: string; up?: boolean };
+};
+
+async function realStats(orgId: string, currency: string): Promise<StatsItem[]> {
+  const [rev, orders, prods, clients, pays] = await Promise.all([
+    db()
+      .select({ total: salesDocuments.total })
+      .from(salesDocuments)
+      .where(and(eq(salesDocuments.organizationId, orgId), eq(salesDocuments.status, "paid"))),
+    db()
+      .select({ id: salesDocuments.id })
+      .from(salesDocuments)
+      .where(and(eq(salesDocuments.organizationId, orgId), eq(salesDocuments.type, "order"))),
+    db().select({ id: products.id }).from(products).where(eq(products.organizationId, orgId)),
+    db().select({ id: customers.id }).from(customers).where(eq(customers.organizationId, orgId)),
+    db()
+      .select({ amount: payments.amount })
+      .from(payments)
+      .where(eq(payments.organizationId, orgId)),
+  ]);
+  const revenue = rev.reduce((s, r) => s + Number(r.total), 0);
+  const collected = pays.reduce((s, p) => s + Number(p.amount), 0);
+  return [
+    { icon: Wallet, label: "Chiffre d'affaires (facturé)", value: formatCurrency(revenue, currency), tone: "primary", change: { value: "" } },
+    { icon: ShoppingCart, label: "Commandes", value: String(orders.length), tone: "violet" },
+    { icon: Boxes, label: "Produits", value: String(prods.length), tone: "cyan" },
+    { icon: Users, label: "Clients", value: String(clients.length), tone: "green" },
+    { icon: CreditCard, label: "Encaissé", value: formatCurrency(collected, currency), tone: "amber" },
+    { icon: TrendingUp, label: "CA moyen / commande", value: formatCurrency(orders.length ? Math.round(revenue / orders.length) : 0, currency), tone: "rose" },
+  ];
+}
+
 export default async function DashboardPage() {
   const ctx = await getAuthzContext();
   if (!ctx || ctx.superAdmin) redirect("/login");
@@ -37,14 +78,12 @@ export default async function DashboardPage() {
   const org = ctx.organization!;
   const currency = org.currency;
 
-  const stats = [
-    { icon: Wallet, label: "Chiffre d'affaires", value: formatCurrency(0, currency), tone: "primary" as const, change: { value: "+12%", up: true } },
-    { icon: ShoppingCart, label: "Commandes", value: "0", tone: "violet" as const },
-    { icon: Boxes, label: "Produits", value: "0", tone: "cyan" as const },
-    { icon: Users, label: "Clients", value: "0", tone: "green" as const },
-    { icon: BarChart3, label: "Panier moyen", value: formatCurrency(0, currency), tone: "amber" as const },
-    { icon: TrendingUp, label: "Taux de conversion", value: "0%", tone: "rose" as const },
-  ];
+  let stats: StatsItem[] = [];
+  try {
+    stats = await realStats(org.id, currency);
+  } catch {
+    stats = [];
+  }
 
   const bars = [35, 55, 40, 70, 52, 85, 63];
 

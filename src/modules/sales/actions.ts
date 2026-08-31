@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getAuthzContext } from "@/server/auth";
-import { createSalesDocument } from "./service";
+import { createSalesDocument, updateDocumentStatus, recordPayment, convertDocument } from "./service";
 import { createSalesDocumentSchema } from "./validation";
 import type { Result } from "@/lib/result";
 
@@ -61,4 +61,43 @@ export async function createSalesDocumentAction(
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Données invalides." };
   }
+}
+
+export async function updateDocumentStatusAction(
+  id: string,
+  status: string
+): Promise<Result<unknown>> {
+  const ctx = await getAuthzContext();
+  if (!ctx || ctx.superAdmin || !ctx.organization)
+    return { ok: false, error: "Authentification requise." };
+  const res = await updateDocumentStatus(ctx, id, status);
+  if (res.ok) revalidatePath("/app/ventes");
+  return res;
+}
+
+export async function recordPaymentAction(payload: {
+  documentId: string;
+  amount: number;
+  method: string;
+  reference?: string | null;
+}): Promise<Result<unknown>> {
+  const ctx = await getAuthzContext();
+  if (!ctx || ctx.superAdmin || !ctx.organization)
+    return { ok: false, error: "Authentification requise." };
+  if (!(payload.amount > 0)) return { ok: false, error: "Montant invalide." };
+  const res = await recordPayment(ctx, payload);
+  if (res.ok) revalidatePath("/app/ventes");
+  return res;
+}
+
+export async function convertDocumentAction(
+  id: string,
+  toType: string
+): Promise<Result<unknown>> {
+  const ctx = await getAuthzContext();
+  if (!ctx || ctx.superAdmin || !ctx.organization)
+    return { ok: false, error: "Authentification requise." };
+  const res = await convertDocument(ctx, id, toType);
+  if (res.ok) revalidatePath("/app/ventes");
+  return res;
 }

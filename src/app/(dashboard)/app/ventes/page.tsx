@@ -7,6 +7,7 @@ import { listDocuments } from "@/modules/sales";
 import type { Product, Customer, SalesDocument } from "@/db/schema";
 import { NewSalesDocumentButton, type SalesOption } from "@/components/feature/sales/new-sales-document-button";
 import { ExportCsvButton } from "@/components/feature/sales/export-csv-button";
+import { SalesDocumentActions } from "@/components/feature/sales/sales-document-actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FileText } from "lucide-react";
@@ -176,17 +177,20 @@ export default async function VentesPage() {
                           {formatCurrency(Number(d.total), currency)}
                         </td>
                         <td className="py-3">
-                          {d.type === "invoice" && (
-                            <a
-                              href={`/api/documents/invoice/${d.id}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                            >
-                              <FileText className="h-3.5 w-3.5" />
-                              PDF
-                            </a>
-                          )}
+                          <div className="flex items-center gap-1">
+                            <SalesDocumentActions id={d.id} type={d.type} status={d.status} />
+                            {d.type === "invoice" && (
+                              <a
+                                href={`/api/documents/invoice/${d.id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                                aria-label="Télécharger le PDF"
+                              >
+                                <FileText className="h-3.5 w-3.5" />
+                              </a>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );

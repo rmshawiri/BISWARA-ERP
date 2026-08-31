@@ -2,7 +2,7 @@ import "server-only";
 
 import { eq, and, desc } from "drizzle-orm";
 import { db } from "@/db";
-import { accounts, cashSessions, financialTransactions } from "@/db/schema";
+import { accounts, cashSessions, financialTransactions, budgets } from "@/db/schema";
 import type { AuthzContext } from "@/types";
 import { hasPermission } from "@/server/rbac";
 import { logAudit } from "@/engines/audit";
@@ -208,6 +208,67 @@ export async function listTransactions(
     return ok(rows);
   } catch (e) {
     return err(e instanceof Error ? e.message : "Erreur de lecture");
+  }
+}
+
+/** Liste les sessions de caisse (actives + clôturées). */
+export async function listCashSessions(ctx: AuthzContext) {
+  requirePerm(ctx, "view");
+  const orgId = ctx.organization!.id;
+  try {
+    const rows = await db()
+      .select()
+      .from(cashSessions)
+      .where(eq(cashSessions.organizationId, orgId))
+      .orderBy(desc(cashSessions.createdAt));
+    return ok(rows);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de lecture");
+  }
+}
+
+/** Liste les budgets. */
+export async function listBudgets(ctx: AuthzContext) {
+  requirePerm(ctx, "view");
+  const orgId = ctx.organization!.id;
+  try {
+    const rows = await db()
+      .select()
+      .from(budgets)
+      .where(eq(budgets.organizationId, orgId))
+      .orderBy(budgets.name);
+    return ok(rows);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de lecture");
+  }
+}
+
+/** Crée un budget. */
+export async function createBudget(
+  ctx: AuthzContext,
+  input: { name: string; category?: string | null; planned: number }
+) {
+  requirePerm(ctx, "create");
+  const orgId = ctx.organization!.id;
+  try {
+    const [row] = await db()
+      .insert(budgets)
+      .values({ organizationId: orgId, name: input.name, category: input.category ?? null, planned: input.planned })
+      .returning();
+    if (!row) return err("Création impossible.");
+    await logAudit({
+      userId: ctx.user.id,
+      userName: ctx.user.fullName,
+      organizationId: orgId,
+      module: MODULES.FINANCE,
+      action: "budget.create",
+      entityType: "budget",
+      entityId: row.id,
+      newValue: { name: row.name, planned: row.planned },
+    });
+    return ok(row);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de création");
   }
 }
 

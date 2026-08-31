@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getAuthzContext } from "@/server/auth";
-import { createCustomer, updateCustomer, deactivateCustomer } from "./service";
+import { createCustomer, updateCustomer, deactivateCustomer, createOpportunity, updateOpportunityStage } from "./service";
 import { createCustomerSchema, updateCustomerSchema } from "./validation";
 import type { Result } from "@/lib/result";
 
@@ -71,4 +71,36 @@ export async function updateCustomerAction(
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Données invalides." };
   }
+}
+
+export async function createOpportunityAction(payload: {
+  customerId: string;
+  title: string;
+  value: number;
+  stage?: string;
+}): Promise<Result<unknown>> {
+  const ctx = await getAuthzContext();
+  if (!ctx || ctx.superAdmin || !ctx.organization)
+    return { ok: false, error: "Authentification requise." };
+  const res = await createOpportunity(ctx, {
+    customerId: payload.customerId,
+    title: payload.title,
+    value: payload.value,
+    stage: payload.stage ?? "prospect",
+  });
+  if (res.ok) revalidatePath("/app/crm");
+  return res;
+}
+
+export async function updateOpportunityStageAction(
+  id: string,
+  stage: string,
+  status?: string
+): Promise<Result<unknown>> {
+  const ctx = await getAuthzContext();
+  if (!ctx || ctx.superAdmin || !ctx.organization)
+    return { ok: false, error: "Authentification requise." };
+  const res = await updateOpportunityStage(ctx, id, stage, status);
+  if (res.ok) revalidatePath("/app/crm");
+  return res;
 }

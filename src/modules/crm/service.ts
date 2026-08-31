@@ -2,7 +2,7 @@ import "server-only";
 
 import { eq, and, or, ilike } from "drizzle-orm";
 import { db } from "@/db";
-import { customers } from "@/db/schema";
+import { customers, opportunities } from "@/db/schema";
 import type { AuthzContext } from "@/types";
 import { hasPermission } from "@/server/rbac";
 import { logAudit } from "@/engines/audit";
@@ -130,5 +130,93 @@ export async function deactivateCustomer(
     return ok(row);
   } catch (e) {
     return err(e instanceof Error ? e.message : "Erreur de suppression");
+  }
+}
+
+/** Liste les opportunités de l'organisation. */
+export async function listOpportunities(
+  ctx: AuthzContext
+): Promise<Result<typeof opportunities.$inferSelect[]>> {
+  requirePerm(ctx, "view");
+  const orgId = ctx.organization!.id;
+  try {
+    const rows = await db()
+      .select()
+      .from(opportunities)
+      .where(eq(opportunities.organizationId, orgId))
+      .orderBy(opportunities.createdAt);
+    return ok(rows);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de lecture");
+  }
+}
+
+/** Crée une opportunité. */
+export async function createOpportunity(
+  ctx: AuthzContext,
+  input: { customerId: string; title: string; value: number; probability?: number; stage?: string; expectedDate?: string | null; notes?: string | null }
+): Promise<Result<typeof opportunities.$inferSelect>> {
+  requirePerm(ctx, "create");
+  const orgId = ctx.organization!.id;
+  try {
+    const [row] = await db()
+      .insert(opportunities)
+      .values({
+        organizationId: orgId,
+        customerId: input.customerId,
+        title: input.title,
+        value: input.value,
+        probability: input.probability ?? 0,
+        stage: input.stage ?? "prospect",
+        expectedDate: input.expectedDate ?? null,
+        notes: input.notes ?? null,
+      })
+      .returning();
+    if (!row) return err("Création impossible.");
+    await logAudit({
+      userId: ctx.user.id,
+      userName: ctx.user.fullName,
+      organizationId: orgId,
+      module: MODULES.CRM,
+      action: "opportunity.create",
+      entityType: "opportunity",
+      entityId: row.id,
+      newValue: { title: row.title, value: row.value },
+    });
+    return ok(row);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de création");
+  }
+}
+
+/** Met à jour l'étape / statut d'une opportunité. */
+export async function updateOpportunityStage(
+  ctx: AuthzContext,
+  id: string,
+  stage: string,
+  status?: string
+): Promise<Result<typeof opportunities.$inferSelect>> {
+  requirePerm(ctx, "update");
+  const orgId = ctx.organization!.id;
+  try {
+    const [row] = await db()
+      .update(opportunities)
+      .set({ stage, ...(status ? { status } : {}) })
+      .where(and(eq(opportunities.id, id), eq(opportunities.organizationId, orgId)))
+      .returning();
+    if (!row) return err("Opportunité introuvable.");
+    await logAudit({
+      userId: ctx.user.id,
+      userName: ctx.user.fullName,
+      organizationId: orgId,
+      module: MODULES.CRM,
+      action: "opportunity.stage",
+      entityType: "opportunity",
+      entityId: id,
+      newValue: { stage, status },
+    });
+    return ok(row);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de mise à jour");
   }
 }

@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getAuthzContext } from "@/server/auth";
-import { listAccounts, listTransactions } from "@/modules/finance";
-import type { Account, FinancialTransaction } from "@/db/schema";
+import { listAccounts, listTransactions, listCashSessions, listBudgets } from "@/modules/finance";
+import type { Account, FinancialTransaction, CashSession, Budget } from "@/db/schema";
 import { NewAccountButton } from "@/components/feature/finance/new-account-button";
 import { NewTransactionButton } from "@/components/feature/finance/new-transaction-button";
+import { FinanceExtras } from "@/components/feature/finance/finance-extras";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Wallet, ArrowDownUp } from "lucide-react";
@@ -39,12 +40,21 @@ export default async function FinancePage() {
 
   let accounts: Account[] = [];
   let transactions: FinancialTransaction[] = [];
+  let cashSessions: CashSession[] = [];
+  let budgets: Budget[] = [];
   let dbReady = true;
 
   try {
-    const [a, t] = await Promise.all([listAccounts(ctx), listTransactions(ctx)]);
+    const [a, t, cs, bg] = await Promise.all([
+      listAccounts(ctx),
+      listTransactions(ctx),
+      listCashSessions(ctx),
+      listBudgets(ctx),
+    ]);
     if (a.ok) accounts = a.data;
     if (t.ok) transactions = t.data;
+    if (cs.ok) cashSessions = cs.data;
+    if (bg.ok) budgets = bg.data;
   } catch {
     dbReady = false;
   }
@@ -171,6 +181,26 @@ export default async function FinancePage() {
           </CardContent>
         </Card>
       </div>
+
+      <FinanceExtras
+        accounts={accounts.map((a) => ({ id: a.id, name: a.name, type: a.type }))}
+        sessions={cashSessions.map((s) => ({
+          id: s.id,
+          accountId: s.accountId,
+          status: s.status,
+          openingBalance: Number(s.openingBalance),
+          theoreticalBalance: Number(s.theoreticalBalance),
+          realBalance: Number(s.realBalance),
+          gap: Number(s.gap),
+        }))}
+        budgets={budgets.map((b) => ({
+          id: b.id,
+          name: b.name,
+          category: b.category,
+          planned: Number(b.planned),
+        }))}
+        currency={currency}
+      />
     </div>
   );
 }

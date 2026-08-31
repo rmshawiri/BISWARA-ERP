@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getAuthzContext } from "@/server/auth";
-import { createAccount, recordTransaction } from "./service";
+import { createAccount, recordTransaction, openCashSession, closeCashSession, createBudget } from "./service";
 import type { Result } from "@/lib/result";
 
 export async function createAccountAction(
@@ -66,4 +66,54 @@ export async function recordTransactionAction(
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Données invalides." };
   }
+}
+
+export async function openCashSessionAction(payload: {
+  accountId: string;
+  openingBalance: number;
+}): Promise<Result<unknown>> {
+  const ctx = await getAuthzContext();
+  if (!ctx || !ctx.organization) return { ok: false, error: "Authentification requise." };
+  if (!payload.accountId) return { ok: false, error: "Sélectionnez un compte." };
+  const res = await openCashSession(ctx, payload.accountId, payload.openingBalance ?? 0);
+  if (res.ok) revalidatePath("/app/finance");
+  return res;
+}
+
+export async function closeCashSessionAction(payload: {
+  sessionId: string;
+  realBalance: number;
+  inflows: number;
+  outflows: number;
+  justification: string;
+}): Promise<Result<unknown>> {
+  const ctx = await getAuthzContext();
+  if (!ctx || !ctx.organization) return { ok: false, error: "Authentification requise." };
+  const res = await closeCashSession(
+    ctx,
+    payload.sessionId,
+    payload.realBalance,
+    payload.inflows,
+    payload.outflows,
+    payload.justification
+  );
+  if (res.ok) revalidatePath("/app/finance");
+  return res;
+}
+
+export async function createBudgetAction(payload: {
+  name: string;
+  category?: string;
+  planned: number;
+}): Promise<Result<unknown>> {
+  const ctx = await getAuthzContext();
+  if (!ctx || !ctx.organization) return { ok: false, error: "Authentification requise." };
+  if (!payload.name?.trim()) return { ok: false, error: "Nom requis." };
+  const res = await createBudget(ctx, {
+    name: payload.name.trim(),
+    category: payload.category || null,
+    planned: payload.planned ?? 0,
+  });
+  if (res.ok) revalidatePath("/app/finance");
+  return res;
 }

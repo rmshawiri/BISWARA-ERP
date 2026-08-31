@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getAuthzContext } from "@/server/auth";
-import { listCustomers } from "@/modules/crm";
-import type { Customer } from "@/db/schema";
+import { listCustomers, listOpportunities } from "@/modules/crm";
+import type { Customer, Opportunity } from "@/db/schema";
 import { NewCustomerButton } from "@/components/feature/crm/new-customer-button";
+import { OpportunityPipeline } from "@/components/feature/crm/opportunity-pipeline";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users } from "lucide-react";
@@ -22,12 +23,17 @@ export default async function CrmPage() {
 
   let customers: Customer[] = [];
   let dbReady = true;
+  let opportunities: Opportunity[] = [];
   try {
     const res = await listCustomers(ctx);
     if (res.ok) customers = res.data;
+    const opp = await listOpportunities(ctx);
+    if (opp.ok) opportunities = opp.data;
   } catch {
     dbReady = false;
   }
+
+  const customerById = new Map(customers.map((c) => [c.id, c]));
 
   return (
     <div className="space-y-6">
@@ -94,6 +100,23 @@ export default async function CrmPage() {
           )}
         </CardContent>
       </Card>
+
+      <OpportunityPipeline
+        opportunities={opportunities.map((o) => ({
+          id: o.id,
+          title: o.title,
+          value: Number(o.value),
+          stage: o.stage,
+          customerName: customerById.get(o.customerId)?.company ??
+            customerById.get(o.customerId)?.lastname ??
+            "—",
+        }))}
+        customers={customers.map((c) => ({
+          id: c.id,
+          label: c.company ? `${c.company} — ${c.lastname}` : c.lastname,
+        }))}
+        currency={ctx.organization?.currency ?? "KMF"}
+      />
     </div>
   );
 }
