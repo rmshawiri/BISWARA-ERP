@@ -55,24 +55,29 @@ export default function LoginPage() {
         return;
       }
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user?.id)
-        .single();
-
       toast.success("Connexion réussie");
-      if (profile?.role === "super_admin") {
-        router.push("/admin");
-      } else {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user?.id)
+          .single();
+        if (profile?.role === "super_admin") {
+          router.push("/admin");
+        } else {
+          router.push("/app");
+        }
+      } catch {
+        // Même si le profil ne se charge pas, l'utilisateur est authentifié.
         router.push("/app");
       }
       router.refresh();
-    } catch {
-      toast.error("Une erreur est survenue. Réessayez.");
+    } catch (err) {
+      console.error("[login] Erreur inattendue :", err);
+      toast.error("Connexion impossible. Vérifiez votre connexion et réessayez.");
     } finally {
       setLoading(false);
     }
