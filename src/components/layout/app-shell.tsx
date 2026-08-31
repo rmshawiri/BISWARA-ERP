@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   BarChart3,
   Bell,
+  BookOpen,
   Boxes,
   ChevronsUpDown,
   LayoutDashboard,
@@ -53,6 +54,7 @@ const navItems = [
   { href: "/app/ventes", label: "Ventes", icon: BarChart3 },
   { href: "/app/stock", label: "Stock", icon: Boxes },
   { href: "/app/finance", label: "Finance", icon: Wallet },
+  { href: "/app/comptabilite", label: "Comptabilité", icon: BookOpen },
   { href: "/app/parametres", label: "Paramètres", icon: Settings },
 ];
 

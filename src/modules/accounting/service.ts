@@ -1,6 +1,6 @@
 import "server-only";
 
-import { eq, and, like, sql } from "drizzle-orm";
+import { eq, and, like, sql, desc } from "drizzle-orm";
 import { db } from "@/db";
 import {
   chartOfAccounts,
@@ -145,3 +145,23 @@ export async function listJournals(
     return err(e instanceof Error ? e.message : "Erreur de lecture");
   }
 }
+
+/** Liste les écritures comptables de l'organisation (ordre décroissant). */
+export async function listJournalEntries(
+  ctx: AuthzContext
+): Promise<Result<typeof journalEntries.$inferSelect[]>> {
+  requirePerm(ctx, "view");
+  const orgId = ctx.organization!.id;
+  try {
+    const rows = await db()
+      .select()
+      .from(journalEntries)
+      .where(eq(journalEntries.organizationId, orgId))
+      .orderBy(desc(journalEntries.createdAt))
+      .limit(100);
+    return ok(rows);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de lecture");
+  }
+}
+
