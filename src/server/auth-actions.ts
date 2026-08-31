@@ -18,7 +18,15 @@ export async function resolveIdentifier(identifier: string): Promise<{
   if (isEmail(value)) return { email: value };
 
   // Nom d'utilisateur : résolution via la table profiles.
-  const admin = createAdminClient();
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch {
+    return {
+      error:
+        "Service d'authentification indisponible. Vérifiez la configuration des variables d'environnement.",
+    };
+  }
   const { data, error } = await admin
     .from("profiles")
     .select("email")
