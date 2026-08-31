@@ -30,6 +30,8 @@ const NAV_TRANSLATIONS: Record<string, Record<Locale, string>> = {
   settings: { fr: "Paramètres", en: "Settings", sw: "Mipangilio" },
   administration: { fr: "Administration", en: "Administration", sw: "Usimamizi" },
   audit: { fr: "Journal d'audit", en: "Audit log", sw: "Kumbukumbu" },
+  rapports: { fr: "Rapports", en: "Reports", sw: "Ripoti" },
+  portail: { fr: "Mon espace", en: "My space", sw: "Nafasi yangu" },
 };
 
 /** Traduit un libellé de navigation selon la locale. */

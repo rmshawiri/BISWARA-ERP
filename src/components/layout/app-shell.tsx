@@ -21,6 +21,7 @@ import {
   Settings,
   ShieldCheck,
   Truck,
+  UserRound,
   Users,
   Wallet,
   X,
@@ -80,6 +81,8 @@ const DASHBOARD_ITEM = { href: "/app", label: "Tableau de bord", icon: LayoutDas
 const SETTINGS_ITEM = { href: "/app/parametres", label: "Paramètres", icon: Settings };
 const ADMIN_ITEM = { href: "/app/administration", label: "Administration", icon: ShieldCheck };
 const AUDIT_ITEM = { href: "/app/audit", label: "Journal d'audit", icon: ScrollText };
+const RAPPORTS_ITEM = { href: "/app/rapports", label: "Rapports", icon: BarChart3 };
+const PORTAIL_ITEM = { href: "/app/portail", label: "Mon espace", icon: UserRound };
 
 export function AppShell({ user, organization, allowedModules, unreadNotifications = 0, canAdmin = false, children }: AppShellProps) {
   const pathname = usePathname();
@@ -96,6 +99,8 @@ export function AppShell({ user, organization, allowedModules, unreadNotificatio
         return c ? { ...c, label: navLabel(m, locale) } : null;
       })
       .filter((x): x is { href: string; label: string; icon: typeof Users } => Boolean(x)),
+    { ...RAPPORTS_ITEM, label: navLabel("rapports", locale) },
+    { ...PORTAIL_ITEM, label: navLabel("portail", locale) },
     ...(canAdmin
       ? [
           { ...ADMIN_ITEM, label: navLabel("administration", locale) },
