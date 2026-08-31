@@ -8,6 +8,7 @@ import { hasPermission } from "@/server/rbac";
 import { logAudit } from "@/engines/audit";
 import { MODULES, type PermissionAction } from "@/lib/constants";
 import { err, ok, Result } from "@/lib/result";
+import { autoPostDepreciationEntry } from "@/modules/accounting";
 import { linearAmortization, type AmortizationResult } from "./logic";
 
 function requirePerm(ctx: AuthzContext, action: PermissionAction): void {
@@ -114,5 +115,23 @@ export async function disposeAsset(
     return ok(row);
   } catch (e) {
     return err(e instanceof Error ? e.message : "Erreur de sortie");
+  }
+}
+
+/** Poste l'écriture d'amortissement annuel d'un actif (best-effort). */
+export async function postDepreciation(ctx: AuthzContext, id: string) {
+  requirePerm(ctx, "update");
+  const orgId = ctx.organization!.id;
+  try {
+    const [asset] = await db().select().from(assets).where(and(eq(assets.id, id), eq(assets.organizationId, orgId))).limit(1);
+    if (!asset) return err("Actif introuvable.");
+    const amort = amortizationFor(asset);
+    const res = await autoPostDepreciationEntry(ctx, amort.annual, `Amortissement ${asset.name}`);
+    if (res.ok) {
+      await logAudit({ userId: ctx.user.id, userName: ctx.user.fullName, organizationId: orgId, module: MODULES.ASSETS, action: "asset.amortization", entityType: "asset", entityId: id, newValue: { annual: amort.annual } });
+    }
+    return res;
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur d'amortissement");
   }
 }

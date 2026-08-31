@@ -2,7 +2,7 @@ import "server-only";
 
 import { eq, and, like, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { salesDocuments, salesDocumentLines, payments } from "@/db/schema";
+import { salesDocuments, salesDocumentLines, payments, stockMovements } from "@/db/schema";
 import type { AuthzContext } from "@/types";
 import { hasPermission } from "@/server/rbac";
 import { logAudit } from "@/engines/audit";
@@ -11,6 +11,7 @@ import { err, ok, Result } from "@/lib/result";
 import { buildDocumentNumber } from "@/lib/numbering";
 import { allocatePayment } from "@/modules/finance/logic";
 import { autoPostSalesEntry } from "@/modules/accounting";
+import { notifyOrgUsers } from "@/engines/notify-org";
 import {
   CreateSalesDocumentInput,
   computeTotals,
@@ -109,6 +110,10 @@ export async function createSalesDocument(
       entityId: document.id,
       newValue: { number, total: totals.total },
     });
+
+    try {
+      await notifyOrgUsers(orgId, `${PREFIX[input.type] ?? "Doc"} ${number} créé`, "Un nouveau document commercial a été créé.", "/app/ventes", MODULES.SALES);
+    } catch { /* non bloquant */ }
 
     return ok({ document, totals });
   } catch (e) {
@@ -209,6 +214,30 @@ export async function updateDocumentStatus(
         // Non bloquant : la comptabilité doit être configurée pour fonctionner.
       }
     }
+    // Décrément automatique du stock à la validation d'une facture (I1).
+    if (next === "validated" && doc.type === "invoice") {
+      try {
+        const lines = await db()
+          .select()
+          .from(salesDocumentLines)
+          .where(eq(salesDocumentLines.documentId, id));
+        const date = new Date().toISOString().slice(0, 10);
+        for (const l of lines) {
+          if (l.productId) {
+            await db().insert(stockMovements).values({
+              organizationId: orgId,
+              productId: l.productId,
+              type: "out",
+              quantity: l.quantity,
+              reference: doc.number,
+              date,
+            });
+          }
+        }
+      } catch {
+        // Non bloquant.
+      }
+    }
     return ok(row!);
   } catch (e) {
     return err(e instanceof Error ? e.message : "Erreur de changement de statut");
@@ -276,6 +305,10 @@ export async function recordPayment(
       entityId: payment.id,
       newValue: { amount: input.amount, method: input.method },
     });
+
+    try {
+      await notifyOrgUsers(orgId, `Paiement ${input.amount} ${ctx.organization?.currency ?? "KMF"}`, `Paiement reçu sur ${doc.number}.`, "/app/ventes", MODULES.SALES);
+    } catch { /* non bloquant */ }
 
     return ok({ payment, remaining: alloc.remaining, status: newStatus });
   } catch (e) {

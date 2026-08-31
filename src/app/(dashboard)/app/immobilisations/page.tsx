@@ -5,6 +5,7 @@ import { listAssets, amortizationFor } from "@/modules/assets";
 import type { Asset } from "@/db/schema";
 import { NewAssetButton } from "@/components/feature/assets/new-asset-button";
 import { DisposeAssetButton } from "@/components/feature/assets/dispose-asset-button";
+import { DepreciationButton } from "@/components/feature/assets/depreciation-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Landmark } from "lucide-react";
@@ -114,7 +115,12 @@ export default async function ImmobilisationsPage() {
                           </Badge>
                         </td>
                         <td className="py-3">
-                          {a.status === "active" && <DisposeAssetButton id={a.id} />}
+                          {a.status === "active" && (
+                            <div className="flex gap-1">
+                              <DepreciationButton id={a.id} />
+                              <DisposeAssetButton id={a.id} />
+                            </div>
+                          )}
                         </td>
                       </tr>
                     );

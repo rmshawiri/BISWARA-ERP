@@ -9,6 +9,7 @@ import { logAudit } from "@/engines/audit";
 import { MODULES, type PermissionAction } from "@/lib/constants";
 import { err, ok, Result } from "@/lib/result";
 import { autoPostPayrollEntry } from "@/modules/accounting";
+import { notifyOrgUsers } from "@/engines/notify-org";
 
 function requirePerm(ctx: AuthzContext, action: PermissionAction): void {
   if (!hasPermission(ctx, MODULES.HR, action)) {
@@ -125,6 +126,9 @@ export async function createLeaveRequest(
       entityType: "leave_request",
       entityId: row.id,
     });
+    try {
+      await notifyOrgUsers(orgId, "Nouvelle demande de congé", `${input.type} (${input.startDate} → ${input.endDate}).`, "/app/rh", MODULES.HR);
+    } catch { /* non bloquant */ }
     return ok(row);
   } catch (e) {
     return err(e instanceof Error ? e.message : "Erreur de création");

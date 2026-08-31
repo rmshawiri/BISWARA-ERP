@@ -404,3 +404,27 @@ export async function autoPostPayrollEntry(ctx: AuthzContext, amount: number, la
   }
 }
 
+/** Écriture automatique : amortissement d'immobilisation. */
+export async function autoPostDepreciationEntry(ctx: AuthzContext, amount: number, label: string) {
+  const orgId = ctx.organization!.id;
+  const journal = await defaultJournal(ctx, orgId);
+  const expense = await pickAccount(ctx, orgId, "expense");
+  const asset = await pickAccount(ctx, orgId, "asset");
+  if (!journal || !expense || !asset) return err("Comptabilité non configurée (journal + comptes charge/actif).");
+  try {
+    const res = await createJournalEntry(ctx, {
+      journalId: journal.id,
+      date: new Date().toISOString().slice(0, 10),
+      label,
+      lines: [
+        { account: expense.id, label: "Dotation aux amortissements", debit: amount, credit: 0 },
+        { account: asset.id, label: "Amortissements", debit: 0, credit: amount },
+      ],
+      sourceModule: "assets",
+    });
+    return res;
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur d'écriture auto");
+  }
+}
+

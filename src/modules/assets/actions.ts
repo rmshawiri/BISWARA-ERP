@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getAuthzContext } from "@/server/auth";
-import { createAsset, disposeAsset } from "./service";
+import { createAsset, disposeAsset, postDepreciation } from "./service";
 import type { Result } from "@/lib/result";
 
 export async function createAssetAction(
@@ -48,6 +48,15 @@ export async function disposeAssetAction(
   if (!ctx || ctx.superAdmin || !ctx.organization)
     return { ok: false, error: "Authentification requise." };
   const res = await disposeAsset(ctx, id, reason);
+  if (res.ok) revalidatePath("/app/immobilisations");
+  return res;
+}
+
+export async function postDepreciationAction(id: string): Promise<Result<unknown>> {
+  const ctx = await getAuthzContext();
+  if (!ctx || ctx.superAdmin || !ctx.organization)
+    return { ok: false, error: "Authentification requise." };
+  const res = await postDepreciation(ctx, id);
   if (res.ok) revalidatePath("/app/immobilisations");
   return res;
 }
