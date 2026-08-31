@@ -10,6 +10,7 @@ import {
   Boxes,
   CalendarDays,
   ChevronsUpDown,
+  FolderKanban,
   Landmark,
   LayoutDashboard,
   LogOut,
@@ -59,6 +60,7 @@ const navItems = [
   { href: "/app/comptabilite", label: "Comptabilité", icon: BookOpen },
   { href: "/app/immobilisations", label: "Immobilisations", icon: Landmark },
   { href: "/app/rh", label: "RH", icon: CalendarDays },
+  { href: "/app/projets", label: "Projets", icon: FolderKanban },
   { href: "/app/parametres", label: "Paramètres", icon: Settings },
 ];
 
