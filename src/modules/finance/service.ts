@@ -1,6 +1,6 @@
 import "server-only";
 
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { db } from "@/db";
 import { accounts, cashSessions, financialTransactions } from "@/db/schema";
 import type { AuthzContext } from "@/types";
@@ -191,3 +191,23 @@ export async function recordTransaction(
     return err(e instanceof Error ? e.message : "Erreur de création");
   }
 }
+
+/** Liste les transactions financières de l'organisation (ordre décroissant). */
+export async function listTransactions(
+  ctx: AuthzContext
+): Promise<Result<typeof financialTransactions.$inferSelect[]>> {
+  requirePerm(ctx, "view");
+  const orgId = ctx.organization!.id;
+  try {
+    const rows = await db()
+      .select()
+      .from(financialTransactions)
+      .where(eq(financialTransactions.organizationId, orgId))
+      .orderBy(desc(financialTransactions.createdAt))
+      .limit(100);
+    return ok(rows);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de lecture");
+  }
+}
+
