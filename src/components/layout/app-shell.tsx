@@ -13,6 +13,7 @@ import {
   Menu,
   Package,
   Settings,
+  Truck,
   Users,
   X,
 } from "lucide-react";
@@ -47,6 +48,7 @@ const navItems = [
   { href: "/app", label: "Tableau de bord", icon: LayoutDashboard },
   { href: "/app/crm", label: "CRM", icon: Users },
   { href: "/app/catalogue", label: "Catalogue", icon: Package },
+  { href: "/app/achats", label: "Achats", icon: Truck },
   { href: "/app/ventes", label: "Ventes", icon: BarChart3 },
   { href: "/app/stock", label: "Stock", icon: Boxes },
   { href: "/app/parametres", label: "Paramètres", icon: Settings },
