@@ -8,10 +8,13 @@ import {
   getBalance,
   getGrandLivre,
   getFinancialStatements,
+  listFiscalYears,
 } from "@/modules/accounting";
-import type { ChartOfAccount, Journal, JournalEntry } from "@/db/schema";
+import type { ChartOfAccount, Journal, JournalEntry, FiscalYear } from "@/db/schema";
 import { NewJournalEntryButton } from "@/components/feature/accounting/new-journal-entry-button";
 import { AccountingReports } from "@/components/feature/accounting/accounting-reports";
+import { ReverseEntryButton } from "@/components/feature/accounting/reverse-entry-button";
+import { FiscalYearsManager } from "@/components/feature/accounting/fiscal-years-manager";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, PieChart } from "lucide-react";
@@ -36,16 +39,18 @@ export default async function ComptabilitePage() {
   let balance: { number: string; label: string; type: string | null; debit: number; credit: number; balance: number }[] = [];
   let grandLivre: { date: string | null; number: string; label: string; debit: number; credit: number }[] = [];
   let statements: { revenue: number; expense: number; net: number; assets: number; liabilities: number; equity: number } | null = null;
+  let fiscalYears: FiscalYear[] = [];
   let dbReady = true;
 
   try {
-    const [a, j, e, b, gl, st] = await Promise.all([
+    const [a, j, e, b, gl, st, fy] = await Promise.all([
       listAccounts(ctx),
       listJournals(ctx),
       listJournalEntries(ctx),
       getBalance(ctx),
       getGrandLivre(ctx),
       getFinancialStatements(ctx),
+      listFiscalYears(ctx),
     ]);
     if (a.ok) accounts = a.data;
     if (j.ok) journals = j.data;
@@ -53,6 +58,7 @@ export default async function ComptabilitePage() {
     if (b.ok) balance = b.data;
     if (gl.ok) grandLivre = gl.data;
     if (st.ok) statements = st.data;
+    if (fy.ok) fiscalYears = fy.data;
   } catch {
     dbReady = false;
   }
@@ -113,7 +119,8 @@ export default async function ComptabilitePage() {
                       <th className="pb-2 pr-4">Libellé</th>
                       <th className="pb-2 pr-4">Journal</th>
                       <th className="pb-2 pr-4">Débit</th>
-                      <th className="pb-2">Crédit</th>
+                      <th className="pb-2 pr-4">Crédit</th>
+                      <th className="pb-2">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -130,6 +137,9 @@ export default async function ComptabilitePage() {
                         </td>
                         <td className="py-3 font-semibold tabular-nums">
                           {Number(en.totalCredit).toLocaleString("fr-FR")}
+                        </td>
+                        <td className="py-3">
+                          <ReverseEntryButton id={en.id} />
                         </td>
                       </tr>
                     ))}
@@ -174,6 +184,10 @@ export default async function ComptabilitePage() {
       </div>
 
       <AccountingReports balance={balance} grandLivre={grandLivre} statements={statements} currency={currency} />
+
+      <FiscalYearsManager
+        years={fiscalYears.map((y) => ({ id: y.id, startDate: y.startDate, endDate: y.endDate, status: y.status }))}
+      />
     </div>
   );
 }

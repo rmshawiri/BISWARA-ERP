@@ -10,6 +10,7 @@ import { MODULES, type PermissionAction } from "@/lib/constants";
 import { err, ok, Result } from "@/lib/result";
 import { buildDocumentNumber } from "@/lib/numbering";
 import { allocatePayment } from "@/modules/finance/logic";
+import { autoPostSalesEntry } from "@/modules/accounting";
 import {
   CreateSalesDocumentInput,
   computeTotals,
@@ -200,6 +201,14 @@ export async function updateDocumentStatus(
       entityId: id,
       newValue: { status: next },
     });
+    // Génération automatique d'écriture comptable à la validation (best-effort).
+    if (next === "validated" && doc.type === "invoice") {
+      try {
+        await autoPostSalesEntry(ctx, Number(doc.total), `Facture ${doc.number}`);
+      } catch {
+        // Non bloquant : la comptabilité doit être configurée pour fonctionner.
+      }
+    }
     return ok(row!);
   } catch (e) {
     return err(e instanceof Error ? e.message : "Erreur de changement de statut");

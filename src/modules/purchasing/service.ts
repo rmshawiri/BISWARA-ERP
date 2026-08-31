@@ -20,6 +20,7 @@ import {
 } from "@/engines/workflow";
 import { MODULES, type PermissionAction } from "@/lib/constants";
 import { err, ok, Result } from "@/lib/result";
+import { autoPostPurchaseEntry } from "@/modules/accounting";
 
 function requirePerm(ctx: AuthzContext, action: PermissionAction): void {
   if (!hasPermission(ctx, MODULES.PURCHASES, action)) {
@@ -254,6 +255,14 @@ export async function decidePurchaseValidation(
       entityType: "purchase_document",
       entityId: documentId,
     });
+    // Génération automatique d'écriture comptable à l'approbation (best-effort).
+    if (decision === "approved") {
+      try {
+        await autoPostPurchaseEntry(ctx, Number(doc.total), `Achat ${doc.number}`);
+      } catch {
+        // Non bloquant.
+      }
+    }
     return ok(row!);
   } catch (e) {
     return err(e instanceof Error ? e.message : "Erreur de décision");

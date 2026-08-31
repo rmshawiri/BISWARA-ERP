@@ -8,6 +8,7 @@ import { hasPermission } from "@/server/rbac";
 import { logAudit } from "@/engines/audit";
 import { MODULES, type PermissionAction } from "@/lib/constants";
 import { err, ok, Result } from "@/lib/result";
+import { autoPostPayrollEntry } from "@/modules/accounting";
 
 function requirePerm(ctx: AuthzContext, action: PermissionAction): void {
   if (!hasPermission(ctx, MODULES.HR, action)) {
@@ -236,6 +237,12 @@ export async function generatePayroll(ctx: AuthzContext, input: { employeeId: st
       entityId: row.id,
       newValue: { period: row.period, gross, net },
     });
+    // Génération automatique d'écriture comptable (best-effort).
+    try {
+      await autoPostPayrollEntry(ctx, net, `Paie ${row.period}`);
+    } catch {
+      // Non bloquant.
+    }
     return ok(row);
   } catch (e) {
     return err(e instanceof Error ? e.message : "Erreur de génération");
