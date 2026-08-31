@@ -13,6 +13,7 @@ import {
   FolderKanban,
   Landmark,
   LayoutDashboard,
+  MapPin,
   LogOut,
   Menu,
   Package,
@@ -61,6 +62,7 @@ const navItems = [
   { href: "/app/immobilisations", label: "Immobilisations", icon: Landmark },
   { href: "/app/rh", label: "RH", icon: CalendarDays },
   { href: "/app/projets", label: "Projets", icon: FolderKanban },
+  { href: "/app/logistique", label: "Logistique", icon: MapPin },
   { href: "/app/parametres", label: "Paramètres", icon: Settings },
 ];
 
