@@ -2,6 +2,7 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isEmail } from "@/lib/validation";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 /**
  * Résout un identifiant de connexion (email ou nom d'utilisateur) vers l'email
@@ -14,6 +15,12 @@ export async function resolveIdentifier(identifier: string): Promise<{
 }> {
   const value = identifier.trim();
   if (!value) return { error: "Veuillez saisir un identifiant." };
+
+  // Anti-bruteforce basique (baseline).
+  const rl = checkRateLimit(`login:${value.toLowerCase()}`, 10, 5 * 60 * 1000);
+  if (!rl.allowed) {
+    return { error: "Trop de tentatives. Réessayez dans quelques minutes." };
+  }
 
   if (isEmail(value)) return { email: value };
 
