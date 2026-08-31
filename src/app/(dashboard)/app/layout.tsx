@@ -2,6 +2,9 @@ import { redirect } from "next/navigation";
 import { getAuthzContext } from "@/server/auth";
 import { AppShell } from "@/components/layout/app-shell";
 
+// Routes protégées par session → toujours dynamiques.
+export const dynamic = "force-dynamic";
+
 export default async function OrgLayout({
   children,
 }: {

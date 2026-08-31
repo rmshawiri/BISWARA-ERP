@@ -8,6 +8,22 @@ import { resolvePermissions } from "@/server/rbac";
 const PROFILE_TABLE = "profiles";
 const ORG_TABLE = "organizations";
 
+/** Mappe une ligne DB `profiles` (snake_case) vers le type `UserProfile` (camelCase). */
+function mapProfile(row: Record<string, unknown>): UserProfile {
+  return {
+    id: String(row.id ?? ""),
+    username: String(row.username ?? ""),
+    fullName: String(row.full_name ?? ""),
+    email: (row.email as string) ?? null,
+    avatarUrl: (row.avatar_url as string) ?? null,
+    role: (row.role as UserProfile["role"]) ?? "user",
+    organizationId: row.organization_id ? String(row.organization_id) : null,
+    status: (row.status as UserProfile["status"]) ?? "active",
+    createdAt: String(row.created_at ?? ""),
+    updatedAt: String(row.updated_at ?? ""),
+  };
+}
+
 /**
  * Récupère le profil complet de l'utilisateur connecté (côté serveur).
  * Retourne null si non authentifié.
@@ -28,13 +44,8 @@ export async function getCurrentProfile(): Promise<UserProfile | null> {
 
   if (!profile) return null;
 
-  return profile as UserProfile;
+  return mapProfile(profile as Record<string, unknown>);
 }
-
-/**
- * Exige un utilisateur connecté. Retourne la session Supabase + profil.
- * Redirige vers /login sinon.
- */
 export async function requireUser() {
   const supabase = await createClient();
   const {
@@ -51,7 +62,7 @@ export async function requireUser() {
 
   if (!profile) redirect("/login");
 
-  return { supabase, user, profile: profile as UserProfile };
+  return { supabase, user, profile: mapProfile(profile as Record<string, unknown>) };
 }
 
 /**
@@ -74,7 +85,7 @@ export async function getAuthzContext(): Promise<AuthzContext | null> {
 
     if (!profile) return null;
 
-    const profileData = profile as UserProfile;
+    const profileData = mapProfile(profile as Record<string, unknown>);
     const superAdmin = profileData.role === "super_admin";
 
     let organization: Organization | null = null;

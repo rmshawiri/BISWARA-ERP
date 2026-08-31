@@ -11,6 +11,9 @@ import {
 import { SignOutButton } from "@/components/layout/sign-out-button";
 import { BiswaraLogo } from "@/components/brand/biswara-logo";
 
+// Routes protégées par session → toujours dynamiques (jamais statiques).
+export const dynamic = "force-dynamic";
+
 const adminNav = [
   { href: "/admin", label: "Tableau de bord", icon: LayoutDashboard },
   { href: "/admin/organisations", label: "Organisations", icon: Building2 },
