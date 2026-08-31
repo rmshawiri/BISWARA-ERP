@@ -8,6 +8,7 @@ import { hasPermission } from "@/server/rbac";
 import { logAudit } from "@/engines/audit";
 import { MODULES, type PermissionAction } from "@/lib/constants";
 import { err, ok, Result } from "@/lib/result";
+import { notifyOrgUsers } from "@/engines/notify-org";
 import {
   CreateStockMovementInput,
   CreateWarehouseInput,
@@ -106,6 +107,17 @@ export async function createStockMovement(
       entityId: row.id,
       newValue: { productId: input.productId, quantity: input.quantity },
     });
+    // Alerte stock faible (best-effort).
+    try {
+      const [lvl] = await db()
+        .select({ q: sql<number>`sum(case when ${stockMovements.type} in ('in','adjust','inventory') then ${stockMovements.quantity} else -${stockMovements.quantity} end)` })
+        .from(stockMovements)
+        .where(and(eq(stockMovements.organizationId, orgId), eq(stockMovements.productId, input.productId)));
+      const qty = Number(lvl?.q ?? 0);
+      if (qty <= 10) {
+        await notifyOrgUsers(orgId, "Stock faible", `Le produit atteint ${qty} unité(s) restante(s).`, "/app/stock", MODULES.STOCK);
+      }
+    } catch { /* non bloquant */ }
     return ok(row);
   } catch (e) {
     return err(e instanceof Error ? e.message : "Erreur de création");

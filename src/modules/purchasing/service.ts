@@ -21,6 +21,7 @@ import {
 import { MODULES, type PermissionAction } from "@/lib/constants";
 import { err, ok, Result } from "@/lib/result";
 import { autoPostPurchaseEntry } from "@/modules/accounting";
+import { notifyOrgUsers } from "@/engines/notify-org";
 
 function requirePerm(ctx: AuthzContext, action: PermissionAction): void {
   if (!hasPermission(ctx, MODULES.PURCHASES, action)) {
@@ -140,6 +141,10 @@ export async function createPurchaseDocument(
       entityId: document.id,
       newValue: { number, total, status },
     });
+
+    try {
+      await notifyOrgUsers(orgId, `Achat ${number} créé`, `${input.type === "order" ? "Bon de commande" : "Demande d'achat"} de ${total.toLocaleString("fr-FR")}.`, "/app/achats", MODULES.PURCHASES);
+    } catch { /* non bloquant */ }
 
     return ok({ document, approval });
   } catch (e) {

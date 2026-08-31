@@ -16,6 +16,7 @@ import { MODULES, type PermissionAction } from "@/lib/constants";
 import { err, ok, Result } from "@/lib/result";
 import { buildDocumentNumber } from "@/lib/numbering";
 import { buildEntry, type EntryLine } from "./logic";
+import { notifyOrgUsers } from "@/engines/notify-org";
 
 function requirePerm(ctx: AuthzContext, action: PermissionAction): void {
   if (!hasPermission(ctx, MODULES.ACCOUNTING, action)) {
@@ -287,6 +288,9 @@ export async function setFiscalYearStatus(ctx: AuthzContext, id: string, status:
     const [row] = await db().update(fiscalYears).set({ status }).where(and(eq(fiscalYears.id, id), eq(fiscalYears.organizationId, orgId))).returning();
     if (!row) return err("Exercice introuvable.");
     await logAudit({ userId: ctx.user.id, userName: ctx.user.fullName, organizationId: orgId, module: "accounting", action: `fiscal_year.${status}`, entityType: "fiscal_year", entityId: id });
+    if (status === "closed") {
+      try { await notifyOrgUsers(orgId, "Exercice clôturé", "Un exercice comptable a été clôturé.", "/app/comptabilite", "accounting"); } catch {}
+    }
     return ok(row);
   } catch (e) {
     return err(e instanceof Error ? e.message : "Erreur de mise à jour");

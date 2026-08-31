@@ -2,7 +2,7 @@ import "server-only";
 
 import { eq, and, like, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { salesDocuments, salesDocumentLines, payments, stockMovements } from "@/db/schema";
+import { salesDocuments, salesDocumentLines, payments, stockMovements, financialTransactions, accounts } from "@/db/schema";
 import type { AuthzContext } from "@/types";
 import { hasPermission } from "@/server/rbac";
 import { logAudit } from "@/engines/audit";
@@ -308,6 +308,28 @@ export async function recordPayment(
 
     try {
       await notifyOrgUsers(orgId, `Paiement ${input.amount} ${ctx.organization?.currency ?? "KMF"}`, `Paiement reçu sur ${doc.number}.`, "/app/ventes", MODULES.SALES);
+    } catch { /* non bloquant */ }
+
+    // Encaissement -> trésorerie (best-effort, compte choisi automatiquement).
+    try {
+      const [acc] = await db()
+        .select()
+        .from(accounts)
+        .where(and(eq(accounts.organizationId, orgId), eq(accounts.status, "active")))
+        .orderBy(accounts.name)
+        .limit(1);
+      if (acc) {
+        await db().insert(financialTransactions).values({
+          organizationId: orgId,
+          accountId: acc.id,
+          direction: "in",
+          amount: input.amount,
+          method: input.method,
+          reference: doc.number,
+          date: new Date().toISOString().slice(0, 10),
+          notes: `Encaissement ${doc.number}`,
+        });
+      }
     } catch { /* non bloquant */ }
 
     return ok({ payment, remaining: alloc.remaining, status: newStatus });
