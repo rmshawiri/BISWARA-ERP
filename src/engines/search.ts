@@ -7,6 +7,11 @@ import {
   products,
   salesDocuments,
   warehouses,
+  suppliers,
+  employees,
+  projects,
+  vehicles,
+  assets,
 } from "@/db/schema";
 import type { AuthzContext } from "@/types";
 import { hasPermission } from "@/server/rbac";
@@ -134,6 +139,106 @@ export async function globalSearch(
           title: r.name,
           subtitle: r.code ?? undefined,
           href: `/app/stock?id=${r.id}`,
+        });
+      }
+    }
+
+    // Fournisseurs (module achats)
+    if (orgId && can(ctx, MODULES.PURCHASES, "view")) {
+      const rows = await db()
+        .select({ id: suppliers.id, name: suppliers.name, contact: suppliers.contact, email: suppliers.email })
+        .from(suppliers)
+        .where(
+          and(
+            eq(suppliers.organizationId, orgId),
+            or(ilike(suppliers.name, pattern), ilike(suppliers.email, pattern))
+          )
+        )
+        .limit(10);
+      for (const r of rows) {
+        results.push({
+          type: "Fournisseur",
+          id: r.id,
+          title: r.name,
+          subtitle: r.email ?? r.contact ?? undefined,
+          href: `/app/achats?id=${r.id}`,
+        });
+      }
+    }
+
+    // Employés (module RH)
+    if (orgId && can(ctx, MODULES.HR, "view")) {
+      const rows = await db()
+        .select({ id: employees.id, first: employees.firstName, last: employees.lastName, position: employees.position })
+        .from(employees)
+        .where(
+          and(
+            eq(employees.organizationId, orgId),
+            or(ilike(employees.firstName, pattern), ilike(employees.lastName, pattern))
+          )
+        )
+        .limit(10);
+      for (const r of rows) {
+        results.push({
+          type: "Employé",
+          id: r.id,
+          title: `${r.first} ${r.last}`,
+          subtitle: r.position ?? undefined,
+          href: `/app/rh?id=${r.id}`,
+        });
+      }
+    }
+
+    // Projets (module projets)
+    if (orgId && can(ctx, MODULES.PROJECTS, "view")) {
+      const rows = await db()
+        .select({ id: projects.id, name: projects.name, description: projects.description })
+        .from(projects)
+        .where(and(eq(projects.organizationId, orgId), ilike(projects.name, pattern)))
+        .limit(10);
+      for (const r of rows) {
+        results.push({
+          type: "Projet",
+          id: r.id,
+          title: r.name,
+          subtitle: r.description ?? undefined,
+          href: `/app/projets?id=${r.id}`,
+        });
+      }
+    }
+
+    // Véhicules (module logistique)
+    if (orgId && can(ctx, MODULES.LOGISTICS, "view")) {
+      const rows = await db()
+        .select({ id: vehicles.id, plate: vehicles.plate, model: vehicles.model })
+        .from(vehicles)
+        .where(and(eq(vehicles.organizationId, orgId), ilike(vehicles.plate, pattern)))
+        .limit(10);
+      for (const r of rows) {
+        results.push({
+          type: "Véhicule",
+          id: r.id,
+          title: r.plate,
+          subtitle: r.model ?? undefined,
+          href: `/app/logistique?id=${r.id}`,
+        });
+      }
+    }
+
+    // Immobilisations (module actifs)
+    if (orgId && can(ctx, MODULES.ASSETS, "view")) {
+      const rows = await db()
+        .select({ id: assets.id, name: assets.name, reference: assets.reference })
+        .from(assets)
+        .where(and(eq(assets.organizationId, orgId), ilike(assets.name, pattern)))
+        .limit(10);
+      for (const r of rows) {
+        results.push({
+          type: "Immobilisation",
+          id: r.id,
+          title: r.name,
+          subtitle: r.reference ?? undefined,
+          href: `/app/immobilisations?id=${r.id}`,
         });
       }
     }

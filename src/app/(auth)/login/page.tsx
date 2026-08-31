@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, CheckCircle2, Eye, EyeOff, ShieldCheck, Sparkles, Zap } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { resolveIdentifier } from "@/server/auth-actions";
+import { logAuthEvent } from "@/server/auth-audit";
 import { loginSchema } from "@/lib/validation";
 import { BiswaraLogo } from "@/components/brand/biswara-logo";
 import { Button } from "@/components/ui/button";
@@ -56,6 +57,8 @@ export default function LoginPage() {
       }
 
       toast.success("Connexion réussie");
+      // Journalise la connexion (fire-and-forget).
+      logAuthEvent("login");
       try {
         const {
           data: { user },

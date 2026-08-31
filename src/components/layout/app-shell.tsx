@@ -17,7 +17,9 @@ import {
   LogOut,
   Menu,
   Package,
+  ScrollText,
   Settings,
+  ShieldCheck,
   Truck,
   Users,
   Wallet,
@@ -25,6 +27,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { createClient } from "@/lib/supabase/client";
+import { logAuthEvent } from "@/server/auth-audit";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,38 +45,69 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { GlobalSearch } from "@/components/layout/global-search";
 import { BiswaraLogo } from "@/components/brand/biswara-logo";
+import { LanguageSwitcher } from "@/components/feature/i18n/language-switcher";
+import { navLabel, getClientLocale } from "@/lib/i18n";
 import type { UserProfile, Organization } from "@/types";
 
 interface AppShellProps {
   user: UserProfile;
   organization: Organization | null;
+  allowedModules: string[];
+  unreadNotifications?: number;
+  canAdmin?: boolean;
   children: React.ReactNode;
 }
 
-const navItems = [
-  { href: "/app", label: "Tableau de bord", icon: LayoutDashboard },
-  { href: "/app/crm", label: "CRM", icon: Users },
-  { href: "/app/catalogue", label: "Catalogue", icon: Package },
-  { href: "/app/achats", label: "Achats", icon: Truck },
-  { href: "/app/ventes", label: "Ventes", icon: BarChart3 },
-  { href: "/app/stock", label: "Stock", icon: Boxes },
-  { href: "/app/finance", label: "Finance", icon: Wallet },
-  { href: "/app/comptabilite", label: "Comptabilité", icon: BookOpen },
-  { href: "/app/immobilisations", label: "Immobilisations", icon: Landmark },
-  { href: "/app/rh", label: "RH", icon: CalendarDays },
-  { href: "/app/projets", label: "Projets", icon: FolderKanban },
-  { href: "/app/logistique", label: "Logistique", icon: MapPin },
-  { href: "/app/parametres", label: "Paramètres", icon: Settings },
-];
+// Catalogue de navigation : module -> entrée de menu.
+const NAV_CATALOG: Record<
+  string,
+  { href: string; label: string; icon: typeof Users }
+> = {
+  crm: { href: "/app/crm", label: "CRM", icon: Users },
+  catalog: { href: "/app/catalogue", label: "Catalogue", icon: Package },
+  purchases: { href: "/app/achats", label: "Achats", icon: Truck },
+  sales: { href: "/app/ventes", label: "Ventes", icon: BarChart3 },
+  stock: { href: "/app/stock", label: "Stock", icon: Boxes },
+  finance: { href: "/app/finance", label: "Finance", icon: Wallet },
+  accounting: { href: "/app/comptabilite", label: "Comptabilité", icon: BookOpen },
+  assets: { href: "/app/immobilisations", label: "Immobilisations", icon: Landmark },
+  hr: { href: "/app/rh", label: "RH", icon: CalendarDays },
+  projects: { href: "/app/projets", label: "Projets", icon: FolderKanban },
+  logistics: { href: "/app/logistique", label: "Logistique", icon: MapPin },
+};
 
-export function AppShell({ user, organization, children }: AppShellProps) {
+const DASHBOARD_ITEM = { href: "/app", label: "Tableau de bord", icon: LayoutDashboard };
+const SETTINGS_ITEM = { href: "/app/parametres", label: "Paramètres", icon: Settings };
+const ADMIN_ITEM = { href: "/app/administration", label: "Administration", icon: ShieldCheck };
+const AUDIT_ITEM = { href: "/app/audit", label: "Journal d'audit", icon: ScrollText };
+
+export function AppShell({ user, organization, allowedModules, unreadNotifications = 0, canAdmin = false, children }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { resolvedTheme, setTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = React.useState(false);
+  const locale = getClientLocale();
+
+  const navItems = [
+    { ...DASHBOARD_ITEM, label: navLabel("dashboard", locale) },
+    ...allowedModules
+      .map((m) => {
+        const c = NAV_CATALOG[m];
+        return c ? { ...c, label: navLabel(m, locale) } : null;
+      })
+      .filter((x): x is { href: string; label: string; icon: typeof Users } => Boolean(x)),
+    ...(canAdmin
+      ? [
+          { ...ADMIN_ITEM, label: navLabel("administration", locale) },
+          { ...AUDIT_ITEM, label: navLabel("audit", locale) },
+        ]
+      : []),
+    { ...SETTINGS_ITEM, label: navLabel("settings", locale) },
+  ];
 
   async function signOut() {
     const supabase = createClient();
+    logAuthEvent("logout");
     await supabase.auth.signOut();
     router.push("/login");
     router.refresh();
@@ -179,10 +213,17 @@ export function AppShell({ user, organization, children }: AppShellProps) {
           <GlobalSearch className="hidden max-w-md flex-1 md:flex" />
 
           <div className="ml-auto flex items-center gap-1.5">
-            <Button variant="ghost" size="icon" aria-label="Notifications" className="relative">
-              <Bell className="h-[18px] w-[18px]" />
-              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-biswara-gold-500 ring-2 ring-background" />
-            </Button>
+            <Link href="/app/notifications" className="relative" aria-label="Notifications">
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="h-[18px] w-[18px]" />
+                {unreadNotifications > 0 && (
+                  <span className="absolute right-1.5 top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-biswara-gold-500 px-1 text-[10px] font-bold text-white">
+                    {unreadNotifications > 9 ? "9+" : unreadNotifications}
+                  </span>
+                )}
+              </Button>
+            </Link>
+            <LanguageSwitcher />
             <Button
               variant="ghost"
               size="icon"

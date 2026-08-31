@@ -6,6 +6,7 @@ import { listCustomers } from "@/modules/crm";
 import { listDocuments } from "@/modules/sales";
 import type { Product, Customer, SalesDocument } from "@/db/schema";
 import { NewSalesDocumentButton, type SalesOption } from "@/components/feature/sales/new-sales-document-button";
+import { ExportCsvButton } from "@/components/feature/sales/export-csv-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FileText } from "lucide-react";
@@ -92,6 +93,21 @@ export default async function VentesPage() {
           products={productOptions}
           customers={customerOptions}
         />
+        <ExportCsvButton
+          filename="documents-commerciaux.csv"
+          rows={documents.map((d) => ({
+            type: typeLabel.get(d.type) ?? d.type,
+            number: d.number,
+            customer: d.customerId
+              ? customerById.get(d.customerId)?.company ??
+                customerById.get(d.customerId)?.lastname ??
+                ""
+              : "",
+            date: d.date ?? "",
+            status: STATUS_LABELS[d.status] ?? d.status,
+            total: Number(d.total),
+          }))}
+        />
       </div>
 
       {!dbReady && (
@@ -131,6 +147,7 @@ export default async function VentesPage() {
                     <th className="pb-2 pr-4">Date</th>
                     <th className="pb-2 pr-4">Statut</th>
                     <th className="pb-2">Total</th>
+                    <th className="pb-2">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -157,6 +174,19 @@ export default async function VentesPage() {
                         </td>
                         <td className="py-3 font-semibold tabular-nums">
                           {formatCurrency(Number(d.total), currency)}
+                        </td>
+                        <td className="py-3">
+                          {d.type === "invoice" && (
+                            <a
+                              href={`/api/documents/invoice/${d.id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                            >
+                              <FileText className="h-3.5 w-3.5" />
+                              PDF
+                            </a>
+                          )}
                         </td>
                       </tr>
                     );

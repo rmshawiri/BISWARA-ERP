@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/providers/providers";
+import { PwaRegistrar } from "@/components/pwa/pwa-registrar";
 import { siteConfig } from "@/lib/config";
 
 const inter = Inter({
@@ -60,6 +61,7 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  manifest: "/manifest.webmanifest",
 };
 
 export const viewport: Viewport = {
@@ -75,6 +77,7 @@ export default function RootLayout({
     <html lang="fr" suppressHydrationWarning>
       <body className={`${inter.variable} ${spaceGrotesk.variable} font-sans antialiased`}>
         <Providers>{children}</Providers>
+        <PwaRegistrar />
       </body>
     </html>
   );

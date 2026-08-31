@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
 import { getAuthzContext } from "@/server/auth";
+import { getAllowedModules } from "@/modules/navigation";
+import { countUnread } from "@/modules/notifications";
 import { AppShell } from "@/components/layout/app-shell";
 
 // Routes protégées par session → toujours dynamiques.
@@ -14,8 +16,19 @@ export default async function OrgLayout({
   if (!ctx) redirect("/login");
   if (ctx.superAdmin) redirect("/admin");
 
+  const [allowedModules, unreadRes] = await Promise.all([
+    getAllowedModules(ctx),
+    countUnread(ctx),
+  ]);
+
   return (
-    <AppShell user={ctx.user} organization={ctx.organization}>
+    <AppShell
+      user={ctx.user}
+      organization={ctx.organization}
+      allowedModules={allowedModules}
+      unreadNotifications={unreadRes.ok ? unreadRes.data : 0}
+      canAdmin={ctx.user.role === "admin"}
+    >
       {children}
     </AppShell>
   );
