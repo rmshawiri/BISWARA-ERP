@@ -9,6 +9,7 @@ import {
   BookOpen,
   Boxes,
   ChevronsUpDown,
+  Landmark,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -55,6 +56,7 @@ const navItems = [
   { href: "/app/stock", label: "Stock", icon: Boxes },
   { href: "/app/finance", label: "Finance", icon: Wallet },
   { href: "/app/comptabilite", label: "Comptabilité", icon: BookOpen },
+  { href: "/app/immobilisations", label: "Immobilisations", icon: Landmark },
   { href: "/app/parametres", label: "Paramètres", icon: Settings },
 ];
 

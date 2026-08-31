@@ -6,3 +6,4 @@ export * from "./stock";
 export * from "./finance";
 export * from "./accounting";
 export * from "./purchasing";
+export * from "./assets";
