@@ -22,7 +22,12 @@ const PLAN_LABELS: Record<string, string> = {
 };
 
 export default async function AdminOverviewPage() {
-  const ctx = await getAuthzContext();
+  let ctx;
+  try {
+    ctx = await getAuthzContext();
+  } catch {
+    redirect("/login");
+  }
   if (!ctx || !ctx.superAdmin) redirect("/login");
 
   let stats = { organizations: 0, users: 0, activeSubscriptions: 0 };

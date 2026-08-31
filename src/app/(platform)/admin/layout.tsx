@@ -24,7 +24,12 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const ctx = await getAuthzContext();
+  let ctx;
+  try {
+    ctx = await getAuthzContext();
+  } catch {
+    redirect("/login");
+  }
   if (!ctx || !ctx.superAdmin) redirect("/login");
 
   return (
