@@ -4,7 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
-import { ArrowRight, CheckCircle2, ShieldCheck, Sparkles, Zap } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Eye, EyeOff, ShieldCheck, Sparkles, Zap } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { resolveIdentifier } from "@/server/auth-actions";
 import { loginSchema } from "@/lib/validation";
@@ -23,6 +23,7 @@ import {
 export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = React.useState(false);
+  const [showPassword, setShowPassword] = React.useState(false);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -114,6 +115,13 @@ export default function LoginPage() {
       {/* Formulaire */}
       <div className="flex items-center justify-center bg-muted/30 px-4 py-12">
         <div className="w-full max-w-sm">
+          <Link
+            href="/"
+            className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Retour à l'accueil
+          </Link>
           <Link href="/" className="mb-8 flex justify-center lg:hidden">
             <BiswaraLogo />
           </Link>
@@ -141,7 +149,24 @@ export default function LoginPage() {
                       Oublié ?
                     </Link>
                   </div>
-                  <Input id="password" name="password" type="password" autoComplete="current-password" required />
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="current-password"
+                      required
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
                 <Button className="w-full" size="lg" disabled={loading}>
                   {loading ? "Connexion…" : "Se connecter"}
