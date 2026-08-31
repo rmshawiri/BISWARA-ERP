@@ -8,6 +8,7 @@ import {
   Bell,
   BookOpen,
   Boxes,
+  CalendarDays,
   ChevronsUpDown,
   Landmark,
   LayoutDashboard,
@@ -57,6 +58,7 @@ const navItems = [
   { href: "/app/finance", label: "Finance", icon: Wallet },
   { href: "/app/comptabilite", label: "Comptabilité", icon: BookOpen },
   { href: "/app/immobilisations", label: "Immobilisations", icon: Landmark },
+  { href: "/app/rh", label: "RH", icon: CalendarDays },
   { href: "/app/parametres", label: "Paramètres", icon: Settings },
 ];
 
