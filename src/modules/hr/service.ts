@@ -2,7 +2,7 @@ import "server-only";
 
 import { eq, desc, and } from "drizzle-orm";
 import { db } from "@/db";
-import { employees, leaveRequests } from "@/db/schema";
+import { employees, leaveRequests, contracts, attendance, payrolls } from "@/db/schema";
 import type { AuthzContext } from "@/types";
 import { hasPermission } from "@/server/rbac";
 import { logAudit } from "@/engines/audit";
@@ -157,5 +157,100 @@ export async function decideLeave(
     return ok(row);
   } catch (e) {
     return err(e instanceof Error ? e.message : "Erreur de décision");
+  }
+}
+
+/* ---- Contrats ---- */
+export async function listContracts(ctx: AuthzContext) {
+  requirePerm(ctx, "view");
+  try {
+    const rows = await db().select().from(contracts).where(eq(contracts.organizationId, ctx.organization!.id)).orderBy(contracts.createdAt);
+    return ok(rows);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de lecture");
+  }
+}
+
+export async function createContract(ctx: AuthzContext, input: { employeeId: string; contractType: string; startDate?: string | null; endDate?: string | null; baseSalary: number }) {
+  requirePerm(ctx, "create");
+  const orgId = ctx.organization!.id;
+  try {
+    const [row] = await db().insert(contracts).values({ organizationId: orgId, employeeId: input.employeeId, contractType: input.contractType, startDate: input.startDate ?? null, endDate: input.endDate ?? null, baseSalary: input.baseSalary }).returning();
+    if (!row) return err("Création impossible.");
+    return ok(row);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de création");
+  }
+}
+
+/* ---- Présences ---- */
+export async function listAttendance(ctx: AuthzContext) {
+  requirePerm(ctx, "view");
+  try {
+    const rows = await db().select().from(attendance).where(eq(attendance.organizationId, ctx.organization!.id)).orderBy(attendance.workDate);
+    return ok(rows);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de lecture");
+  }
+}
+
+export async function recordAttendance(ctx: AuthzContext, input: { employeeId: string; workDate: string; status: string; clockIn?: string | null; clockOut?: string | null; notes?: string | null }) {
+  requirePerm(ctx, "create");
+  const orgId = ctx.organization!.id;
+  try {
+    const [row] = await db().insert(attendance).values({ organizationId: orgId, employeeId: input.employeeId, workDate: input.workDate, status: input.status, clockIn: input.clockIn ?? null, clockOut: input.clockOut ?? null, notes: input.notes ?? null }).returning();
+    if (!row) return err("Création impossible.");
+    return ok(row);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de création");
+  }
+}
+
+/* ---- Paie ---- */
+export async function listPayrolls(ctx: AuthzContext) {
+  requirePerm(ctx, "view");
+  try {
+    const rows = await db().select().from(payrolls).where(eq(payrolls.organizationId, ctx.organization!.id)).orderBy(payrolls.period);
+    return ok(rows);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de lecture");
+  }
+}
+
+/** Génère un bulletin de paie (gross = base + bonus ; net = gross - deductions). */
+export async function generatePayroll(ctx: AuthzContext, input: { employeeId: string; period: string; baseSalary: number; bonus?: number; deductions?: number }) {
+  requirePerm(ctx, "create");
+  const orgId = ctx.organization!.id;
+  try {
+    const gross = Number(input.baseSalary) + Number(input.bonus ?? 0);
+    const net = gross - Number(input.deductions ?? 0);
+    const [row] = await db().insert(payrolls).values({ organizationId: orgId, employeeId: input.employeeId, period: input.period, baseSalary: input.baseSalary, bonus: input.bonus ?? 0, deductions: input.deductions ?? 0, gross, net, status: "draft" }).returning();
+    if (!row) return err("Création impossible.");
+    await logAudit({
+      userId: ctx.user.id,
+      userName: ctx.user.fullName,
+      organizationId: orgId,
+      module: MODULES.HR,
+      action: "payroll.generate",
+      entityType: "payroll",
+      entityId: row.id,
+      newValue: { period: row.period, gross, net },
+    });
+    return ok(row);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de génération");
+  }
+}
+
+/** Valide un bulletin (statut). */
+export async function setPayrollStatus(ctx: AuthzContext, id: string, status: string) {
+  requirePerm(ctx, "update");
+  const orgId = ctx.organization!.id;
+  try {
+    const [row] = await db().update(payrolls).set({ status }).where(and(eq(payrolls.id, id), eq(payrolls.organizationId, orgId))).returning();
+    if (!row) return err("Bulletin introuvable.");
+    return ok(row);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de mise à jour");
   }
 }

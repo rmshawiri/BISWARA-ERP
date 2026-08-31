@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getAuthzContext } from "@/server/auth";
-import { listEmployees, listLeaveRequests } from "@/modules/hr";
+import { listEmployees, listLeaveRequests, listContracts, listAttendance, listPayrolls } from "@/modules/hr";
 import { leaveBalance } from "@/modules/hr";
-import type { Employee, LeaveRequest } from "@/db/schema";
+import type { Employee, LeaveRequest, Contract, Attendance, Payroll } from "@/db/schema";
 import { NewEmployeeButton } from "@/components/feature/hr/new-employee-button";
 import { LeaveManager } from "@/components/feature/hr/leave-manager";
+import { RhAdvanced } from "@/components/feature/hr/rh-advanced";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, CalendarDays } from "lucide-react";
@@ -31,11 +32,19 @@ export default async function RhPage() {
 
   let employees: Employee[] = [];
   let leaves: LeaveRequest[] = [];
+  let contracts: Contract[] = [];
+  let attendance: Attendance[] = [];
+  let payrolls: Payroll[] = [];
   let dbReady = true;
   try {
-    const [e, l] = await Promise.all([listEmployees(ctx), listLeaveRequests(ctx)]);
+    const [e, l, c, a, p] = await Promise.all([
+      listEmployees(ctx), listLeaveRequests(ctx), listContracts(ctx), listAttendance(ctx), listPayrolls(ctx),
+    ]);
     if (e.ok) employees = e.data;
     if (l.ok) leaves = l.data;
+    if (c.ok) contracts = c.data;
+    if (a.ok) attendance = a.data;
+    if (p.ok) payrolls = p.data;
   } catch {
     dbReady = false;
   }
@@ -168,6 +177,39 @@ export default async function RhPage() {
           days: lv.days,
           status: lv.status,
         }))}
+      />
+
+      <RhAdvanced
+        employees={employees.map((e) => ({ id: e.id, label: `${e.firstName} ${e.lastName}` }))}
+        contracts={contracts.map((c) => ({
+          id: c.id,
+          employeeName: employeeById.get(c.employeeId)?.firstName
+            ? `${employeeById.get(c.employeeId)?.firstName} ${employeeById.get(c.employeeId)?.lastName}`
+            : "—",
+          contractType: c.contractType,
+          startDate: c.startDate,
+          endDate: c.endDate,
+          baseSalary: Number(c.baseSalary),
+        }))}
+        attendance={attendance.map((a) => ({
+          id: a.id,
+          employeeName: employeeById.get(a.employeeId)?.firstName
+            ? `${employeeById.get(a.employeeId)?.firstName} ${employeeById.get(a.employeeId)?.lastName}`
+            : "—",
+          workDate: a.workDate ?? "",
+          status: a.status,
+        }))}
+        payrolls={payrolls.map((p) => ({
+          id: p.id,
+          employeeName: employeeById.get(p.employeeId)?.firstName
+            ? `${employeeById.get(p.employeeId)?.firstName} ${employeeById.get(p.employeeId)?.lastName}`
+            : "—",
+          period: p.period,
+          gross: Number(p.gross),
+          net: Number(p.net),
+          status: p.status,
+        }))}
+        currency={ctx.organization?.currency ?? "KMF"}
       />
     </div>
   );

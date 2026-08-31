@@ -1,7 +1,7 @@
 /**
  * Ressources Humaines — schéma Drizzle (employés, congés, présences).
  */
-import { pgTable, text, uuid, integer, index } from "drizzle-orm/pg-core";
+import { pgTable, text, uuid, integer, numeric, index } from "drizzle-orm/pg-core";
 import { id, createdAt, updatedAt, status } from "./helpers";
 import { organizations } from "./core";
 
@@ -51,3 +51,62 @@ export const leaveRequests = pgTable(
 
 export type Employee = typeof employees.$inferSelect;
 export type LeaveRequest = typeof leaveRequests.$inferSelect;
+
+const money = (col: string) => numeric(col, { precision: 14, scale: 2, mode: "number" }).notNull().default(0);
+
+export const contracts = pgTable(
+  "contracts",
+  {
+    id: id(),
+    organizationId: uuid("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+    employeeId: uuid("employee_id").notNull().references(() => employees.id, { onDelete: "cascade" }),
+    contractType: text("contract_type").notNull().default("cdi"),
+    startDate: text("start_date"),
+    endDate: text("end_date"),
+    baseSalary: money("base_salary"),
+    status: status("active"),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [index("contracts_org_idx").on(t.organizationId)]
+);
+
+export const attendance = pgTable(
+  "attendance",
+  {
+    id: id(),
+    organizationId: uuid("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+    employeeId: uuid("employee_id").notNull().references(() => employees.id, { onDelete: "cascade" }),
+    workDate: text("work_date"),
+    clockIn: text("clock_in"),
+    clockOut: text("clock_out"),
+    status: status("present"),
+    notes: text("notes"),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [index("attendance_org_idx").on(t.organizationId)]
+);
+
+export const payrolls = pgTable(
+  "payrolls",
+  {
+    id: id(),
+    organizationId: uuid("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+    employeeId: uuid("employee_id").notNull().references(() => employees.id, { onDelete: "cascade" }),
+    period: text("period").notNull(),
+    baseSalary: money("base_salary"),
+    bonus: money("bonus"),
+    deductions: money("deductions"),
+    gross: money("gross"),
+    net: money("net"),
+    status: status("draft"),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [index("payrolls_org_idx").on(t.organizationId)]
+);
+
+export type Contract = typeof contracts.$inferSelect;
+export type Attendance = typeof attendance.$inferSelect;
+export type Payroll = typeof payrolls.$inferSelect;
