@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { listOrganizations } from "@/modules/platform";
 import type { Organization } from "@/db/schema";
 import { OrgActions } from "@/components/feature/platform/admin-org-actions";
+import { CreateOrganizationButton } from "@/components/feature/platform/create-organization-button";
 
 export const metadata: Metadata = { title: "Organisations — Admin" };
 
@@ -31,11 +32,14 @@ export default async function AdminOrganizationsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Organisations</h1>
-        <p className="text-muted-foreground">
-          Toutes les organisations de la plateforme (Super Admin).
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">Organisations</h1>
+          <p className="text-muted-foreground">
+            Toutes les organisations de la plateforme (Super Admin).
+          </p>
+        </div>
+        <CreateOrganizationButton />
       </div>
 
       <Card>

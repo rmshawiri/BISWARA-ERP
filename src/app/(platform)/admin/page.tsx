@@ -121,7 +121,7 @@ export default async function AdminOverviewPage() {
             </div>
             <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
               <span>Devise par défaut</span>
-              <span className="font-medium">{ctx.organization?.currency ?? "KMF"}</span>
+              <span className="font-medium">KMF</span>
             </div>
             <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3 sm:col-span-2">
               <span>Pays principal</span>

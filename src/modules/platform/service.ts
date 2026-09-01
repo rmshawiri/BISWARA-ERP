@@ -2,7 +2,7 @@ import "server-only";
 
 import { eq, desc, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { organizations, profiles, subscriptions } from "@/db/schema";
+import { organizations, profiles, subscriptions, auditLogs } from "@/db/schema";
 import type { AuthzContext } from "@/types";
 import { err, ok, Result } from "@/lib/result";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -285,5 +285,75 @@ export async function resetUserPassword(
     return ok({ temporaryPassword });
   } catch (e) {
     return err(e instanceof Error ? e.message : "Erreur de réinitialisation");
+  }
+}
+
+/** Journal d'audit global de la plateforme (Super Admin). */
+export async function listGlobalAudit(
+  ctx: AuthzContext,
+  opts: { limit?: number } = {}
+): Promise<Result<typeof auditLogs.$inferSelect[]>> {
+  requireSuperAdmin(ctx);
+  try {
+    const rows = await db()
+      .select()
+      .from(auditLogs)
+      .orderBy(desc(auditLogs.createdAt))
+      .limit(Math.min(200, opts.limit ?? 100));
+    return ok(rows);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de lecture");
+  }
+}
+
+/** Crée une organisation + compte administrateur + abonnement (Super Admin). */
+export async function createOrganizationByAdmin(
+  ctx: AuthzContext,
+  input: { name: string; email: string; username: string; fullName: string; sector?: string }
+): Promise<Result<{ orgId: string; temporaryPassword: string }>> {
+  requireSuperAdmin(ctx);
+  try {
+    const temporaryPassword = `Bwr-${Math.random().toString(36).slice(2, 12)}`;
+    const admin = createAdminClient();
+
+    // 1. Compte auth utilisateur
+    const { data: created, error: createUserErr } = await admin.auth.admin.createUser({
+      email: input.email,
+      password: temporaryPassword,
+      email_confirm: true,
+      user_metadata: { username: input.username, full_name: input.fullName },
+    });
+    if (createUserErr || !created?.user) return err("Création du compte impossible.");
+
+    // 2. Organisation
+    const { data: org, error: orgErr } = await admin
+      .from("organizations")
+      .insert({ name: input.name, sector: input.sector ?? "general", country: "KM", currency: "KMF", plan: "free", status: "active" })
+      .select("id")
+      .single();
+    if (orgErr || !org) return err("Création de l'organisation impossible.");
+
+    // 3. Profil administrateur
+    const { error: profileErr } = await admin
+      .from("profiles")
+      .upsert({ id: created.user.id, username: input.username, full_name: input.fullName, email: input.email, role: "admin", organization_id: org.id, status: "active" });
+    if (profileErr) return err("Création du profil impossible.");
+
+    // 4. Abonnement
+    await admin.from("subscriptions").insert({ organization_id: org.id, plan: "free", status: "active" });
+
+    await logAudit({
+      userId: ctx.user.id,
+      userName: ctx.user.fullName,
+      module: "admin",
+      action: "organization.create",
+      entityType: "organization",
+      entityId: org.id,
+      newValue: { name: input.name },
+    });
+
+    return ok({ orgId: org.id, temporaryPassword });
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de création");
   }
 }
