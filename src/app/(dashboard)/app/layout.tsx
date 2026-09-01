@@ -4,6 +4,7 @@ import { getAllowedModules } from "@/modules/navigation";
 import { countUnread } from "@/modules/notifications";
 import { isMaintenanceActive } from "@/server/maintenance";
 import { AppShell } from "@/components/layout/app-shell";
+import { AutoRefresh } from "@/components/feature/dashboard/auto-refresh";
 
 // Routes protégées par session → toujours dynamiques.
 export const dynamic = "force-dynamic";
@@ -33,6 +34,7 @@ export default async function OrgLayout({
       unreadNotifications={unreadRes.ok ? unreadRes.data : 0}
       canAdmin={ctx.user.role === "admin"}
     >
+      <AutoRefresh />
       {children}
     </AppShell>
   );

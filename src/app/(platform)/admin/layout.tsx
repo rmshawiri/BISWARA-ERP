@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { SignOutButton } from "@/components/layout/sign-out-button";
 import { BiswaraLogo } from "@/components/brand/biswara-logo";
+import { AutoRefresh } from "@/components/feature/dashboard/auto-refresh";
 
 // Routes protégées par session → toujours dynamiques (jamais statiques).
 export const dynamic = "force-dynamic";
@@ -91,7 +92,10 @@ export default async function AdminLayout({
           <p className="text-sm font-semibold">Administration Plateforme</p>
           <SignOutButton />
         </header>
-        <main className="flex-1 p-6 lg:p-8">{children}</main>
+        <main className="flex-1 p-6 lg:p-8">
+          <AutoRefresh intervalMs={20_000} />
+          {children}
+        </main>
       </div>
     </div>
   );

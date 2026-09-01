@@ -31,9 +31,15 @@ export default async function CataloguePage({ searchParams }: { searchParams: Pr
   const sp = await searchParams;
   const page = Math.max(1, Number(sp.page) || 1);
   const pageSize = 10;
-  const total = ctx.organization
-    ? (await db().select({ c: count() }).from(products).where(eq(products.organizationId, ctx.organization.id)))[0]?.c ?? 0
-    : 0;
+  let total = 0;
+  let dbReady = true;
+  try {
+    total = ctx.organization
+      ? (await db().select({ c: count() }).from(products).where(eq(products.organizationId, ctx.organization.id)))[0]?.c ?? 0
+      : 0;
+  } catch {
+    dbReady = false;
+  }
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   const currency = ctx.organization?.currency ?? "KMF";
@@ -42,7 +48,6 @@ export default async function CataloguePage({ searchParams }: { searchParams: Pr
   let units: Unit[] = [];
   let taxes: Tax[] = [];
   let brands: Brand[] = [];
-  let dbReady = true;
 
   try {
     const p = await listProducts(ctx, { page, pageSize });

@@ -131,7 +131,7 @@ export default async function SettingsPage() {
         currencies={(currenciesRes.ok ? currenciesRes.data : []).map((c) => ({ id: c.id, code: c.code, name: c.name, rateToKmf: Number(c.rateToKmf), isDefault: c.isDefault }))}
         paymentMethods={(paymentMethodsRes.ok ? paymentMethodsRes.data : []).map((m) => ({ id: m.id, name: m.name, code: m.code, active: m.active }))}
         apiKeys={(apiKeysRes.ok ? apiKeysRes.data : []).map((k) => ({ id: k.id, label: k.label, keyText: k.keyText, active: k.active }))}
-        webhooks={(webhooksRes.ok ? webhooksRes.data : []).map((w) => ({ id: w.id, event: w.event, url: w.url, active: w.active }))}
+        webhooks={(webhooksRes.ok ? webhooksRes.data : []).map((w) => ({ id: w.id, event: w.event, url: w.url, name: w.name, method: w.method, active: w.active, lastDeliveryAt: w.lastDeliveryAt ? w.lastDeliveryAt.toISOString() : null, deliveryCount: Number(w.deliveryCount ?? 0) }))}
       />
     </div>
   );

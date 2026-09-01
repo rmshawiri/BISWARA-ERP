@@ -49,11 +49,17 @@ export async function revokeApiKeyAction(id: string): Promise<Result<unknown>> {
   if (res.ok) revalidatePath("/app/parametres");
   return res;
 }
-export async function addWebhookAction(event: string, url: string): Promise<Result<unknown>> {
+export async function addWebhookAction(
+  event: string,
+  url: string,
+  name?: string,
+  method?: string,
+  secretKey?: string
+): Promise<Result<unknown>> {
   const ctx = await getAuthzContext();
   if (!ctx || ctx.superAdmin || !ctx.organization) return { ok: false, error: "Authentification requise." };
   if (!url?.trim()) return { ok: false, error: "URL requise." };
-  const res = await addWebhook(ctx, event || "all", url.trim());
+  const res = await addWebhook(ctx, event || "all", url.trim(), { name, method, secretKey });
   if (res.ok) revalidatePath("/app/parametres");
   return res;
 }

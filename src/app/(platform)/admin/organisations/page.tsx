@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { getAuthzContext } from "@/server/auth";
 import { redirect } from "next/navigation";
 import { Building2 } from "lucide-react";
+import { sql } from "drizzle-orm";
+import { db } from "@/db";
+import { profiles, organizationModules, auditLogs } from "@/db/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { listOrganizations } from "@/modules/platform";
@@ -41,6 +44,33 @@ export default async function AdminOrganizationsPage({
   try {
     const res = await listOrganizations(ctx);
     if (res.ok) orgs = res.data;
+  } catch {
+    // garde-fou
+  }
+
+  // Comptages agrégés (1 requête par métrique, pas de N+1) pour enrichir la fiche.
+  let countByOrg: Record<string, { users: number; modules: number; lastActivity: string | null }> = {};
+  try {
+    const [usersRes, modsRes, auditRes] = await Promise.all([
+      db()
+        .select({ orgId: profiles.organizationId, c: sql<number>`count(*)::int` })
+        .from(profiles)
+        .groupBy(profiles.organizationId),
+      db()
+        .select({ orgId: organizationModules.organizationId, c: sql<number>`count(*)::int` })
+        .from(organizationModules)
+        .where(sql`${organizationModules.active} = true`)
+        .groupBy(organizationModules.organizationId),
+      db()
+        .select({ orgId: auditLogs.organizationId, d: sql<string | null>`max(${auditLogs.createdAt})` })
+        .from(auditLogs)
+        .groupBy(auditLogs.organizationId),
+    ]);
+    const counts: Record<string, { users: number; modules: number; lastActivity: string | null }> = {};
+    for (const r of usersRes) if (r.orgId) counts[r.orgId] = { users: Number(r.c ?? 0), modules: 0, lastActivity: null };
+    for (const r of modsRes) if (r.orgId) counts[r.orgId] = { ...(counts[r.orgId] ?? { users: 0, modules: 0, lastActivity: null }), modules: Number(r.c ?? 0) };
+    for (const r of auditRes) if (r.orgId) counts[r.orgId] = { ...(counts[r.orgId] ?? { users: 0, modules: 0, lastActivity: null }), lastActivity: r.d };
+    countByOrg = counts;
   } catch {
     // garde-fou
   }
@@ -116,37 +146,45 @@ export default async function AdminOrganizationsPage({
                   <tr className="border-b text-left text-xs uppercase text-muted-foreground">
                     <th className="pb-2 pr-4">Nom</th>
                     <th className="pb-2 pr-4">Secteur</th>
-                    <th className="pb-2 pr-4">Pays</th>
+                    <th className="pb-2 pr-4">Pays / Ville</th>
+                    <th className="pb-2 pr-4">Utilisateurs</th>
+                    <th className="pb-2 pr-4">Modules</th>
+                    <th className="pb-2 pr-4">Dernière activité</th>
                     <th className="pb-2 pr-4">Forfait</th>
                     <th className="pb-2 pr-4">Statut</th>
-                    <th className="pb-2 pr-4">Créée le</th>
                     <th className="pb-2">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map((o) => (
-                    <tr key={o.id} className="border-b last:border-0">
-                      <td className="py-3 pr-4 font-medium">{o.name}</td>
-                      <td className="py-3 pr-4 text-muted-foreground">
-                        {o.sector ?? "—"}
-                      </td>
-                      <td className="py-3 pr-4 text-muted-foreground">{o.country}</td>
-                      <td className="py-3 pr-4">
-                        <Badge variant="secondary">{PLAN_LABELS[o.plan] ?? o.plan}</Badge>
-                      </td>
-                      <td className="py-3 pr-4">
-                        <Badge variant={o.status === "active" ? "success" : "warning"}>
-                          {o.status === "active" ? "Active" : "Suspendue"}
-                        </Badge>
-                      </td>
-                      <td className="py-3 text-muted-foreground">
-                        {o.createdAt?.toLocaleDateString("fr-FR") ?? "—"}
-                      </td>
-                      <td className="py-3">
-                        <OrgActions orgId={o.id} status={o.status} plan={o.plan} />
-                      </td>
-                    </tr>
-                  ))}
+                  {rows.map((o) => {
+                    const c = countByOrg[o.id] ?? { users: 0, modules: 0, lastActivity: null };
+                    return (
+                      <tr key={o.id} className="border-b last:border-0">
+                        <td className="py-3 pr-4 font-medium">{o.name}</td>
+                        <td className="py-3 pr-4 text-muted-foreground">{o.sector ?? "—"}</td>
+                        <td className="py-3 pr-4 text-muted-foreground">
+                          {o.country}
+                          {o.city ? ` · ${o.city}` : ""}
+                        </td>
+                        <td className="py-3 pr-4">{c.users}</td>
+                        <td className="py-3 pr-4">{c.modules}</td>
+                        <td className="py-3 pr-4 text-muted-foreground">
+                          {c.lastActivity ? new Date(c.lastActivity).toLocaleDateString("fr-FR") : "—"}
+                        </td>
+                        <td className="py-3 pr-4">
+                          <Badge variant="secondary">{PLAN_LABELS[o.plan] ?? o.plan}</Badge>
+                        </td>
+                        <td className="py-3 pr-4">
+                          <Badge variant={o.status === "active" ? "success" : "warning"}>
+                            {o.status === "active" ? "Active" : "Suspendue"}
+                          </Badge>
+                        </td>
+                        <td className="py-3">
+                          <OrgActions orgId={o.id} status={o.status} plan={o.plan} />
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

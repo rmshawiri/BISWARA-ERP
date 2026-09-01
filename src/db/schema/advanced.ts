@@ -1,7 +1,7 @@
 /**
  * Fonctionnalités avancées — schéma Drizzle (devises, paiements, API, webhooks).
  */
-import { pgTable, text, uuid, boolean, numeric, timestamp, index, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, uuid, boolean, numeric, integer, timestamp, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { id, createdAt, updatedAt, isActive } from "./helpers";
 import { organizations } from "./core";
 
@@ -55,9 +55,14 @@ export const webhooks = pgTable(
   {
     id: id(),
     organizationId: uuid("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+    name: text("name"),
+    secretKey: text("secret_key"),
+    method: text("method").notNull().default("POST"), // POST | PUT | PATCH
     event: text("event").notNull(),
     url: text("url").notNull(),
     active: isActive(),
+    lastDeliveryAt: timestamp("last_delivery_at"),
+    deliveryCount: integer("delivery_count").notNull().default(0),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },

@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ResolvedSignup } from "@/types/signup";
 import { seedDemoData } from "@/modules/demo/seed";
@@ -102,6 +103,9 @@ export async function createOrganization(
   } catch {
     // Ne bloque pas la création.
   }
+
+  // Le Super Admin doit voir la nouvelle organisation immédiatement.
+  revalidatePath("/admin/organisations");
 
   return { ok: true };
 }

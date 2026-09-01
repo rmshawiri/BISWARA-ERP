@@ -6,6 +6,7 @@ import { products, productCategories, units, taxes, brands } from "@/db/schema";
 import type { AuthzContext } from "@/types";
 import { hasPermission } from "@/server/rbac";
 import { logAudit } from "@/engines/audit";
+import { dispatchWebhook } from "@/engines/webhook";
 import type { PermissionAction } from "@/lib/constants";
 import { MODULES } from "@/lib/constants";
 import { err, ok, Result } from "@/lib/result";
@@ -75,6 +76,12 @@ export async function createProduct(
       entityType: "product",
       entityId: row.id,
       newValue: { name: row.name, reference: row.reference },
+    });
+    // Webhook best-effort (non bloquant) : "Nouveau produit".
+    void dispatchWebhook(orgId, "product.created", {
+      id: row.id,
+      name: row.name,
+      reference: row.reference,
     });
     return ok(row);
   } catch (e) {

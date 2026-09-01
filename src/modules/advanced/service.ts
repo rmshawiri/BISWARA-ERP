@@ -117,11 +117,29 @@ export async function listWebhooks(ctx: AuthzContext) {
     return err(e instanceof Error ? e.message : "Erreur de lecture");
   }
 }
-export async function addWebhook(ctx: AuthzContext, event: string, url: string) {
+export async function addWebhook(
+  ctx: AuthzContext,
+  event: string,
+  url: string,
+  opts?: { name?: string; method?: string; secretKey?: string }
+) {
   try {
     requireAdmin(ctx);
     const orgId = requireOrg(ctx);
-    const [row] = await db().insert(webhooks).values({ organizationId: orgId, event: event || "all", url }).returning();
+    const method = ["POST", "PUT", "PATCH"].includes((opts?.method ?? "POST").toUpperCase())
+      ? (opts?.method ?? "POST").toUpperCase()
+      : "POST";
+    const [row] = await db()
+      .insert(webhooks)
+      .values({
+        organizationId: orgId,
+        event: event || "all",
+        url,
+        name: opts?.name?.trim() || null,
+        method,
+        secretKey: opts?.secretKey?.trim() || null,
+      })
+      .returning();
     return ok(row);
   } catch (e) {
     return err(e instanceof Error ? e.message : "Erreur de création");

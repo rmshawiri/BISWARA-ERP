@@ -7,10 +7,18 @@ import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { signupSchema } from "@/lib/validation";
 import { createOrganization } from "@/server/signup-actions";
+import { SECTORS, SECTOR_CUSTOM_VALUE, normalizeSector } from "@/lib/sectors";
 import { BiswaraLogo } from "@/components/brand/biswara-logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Card,
   CardContent,
@@ -22,10 +30,14 @@ import {
 export default function SignupPage() {
   const router = useRouter();
   const [loading, setLoading] = React.useState(false);
+  const [sector, setSector] = React.useState<string>(SECTORS[0]?.id ?? "commerce");
+  const [customSector, setCustomSector] = React.useState("");
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
+    const sectorValue =
+      sector === SECTOR_CUSTOM_VALUE ? normalizeSector(customSector) : sector;
     const values = {
       fullName: String(form.get("fullName") ?? ""),
       username: String(form.get("username") ?? ""),
@@ -33,7 +45,7 @@ export default function SignupPage() {
       password: String(form.get("password") ?? ""),
       passwordConfirm: String(form.get("passwordConfirm") ?? ""),
       organizationName: String(form.get("organizationName") ?? ""),
-      sector: String(form.get("sector") ?? ""),
+      sector: sectorValue,
     };
 
     if (values.password !== values.passwordConfirm) {
@@ -54,6 +66,9 @@ export default function SignupPage() {
         password: values.password,
         options: {
           data: { username: values.username, full_name: values.fullName },
+          // Redirige le lien de confirmation e-mail vers la callback d'auth
+          // (sinon il pointe vers SITE_URL/?code=... qui n'est pas traité).
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
       if (error) {
@@ -131,8 +146,29 @@ export default function SignupPage() {
                   <Input id="organizationName" name="organizationName" required />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="sector">Secteur d'activité</Label>
-                  <Input id="sector" name="sector" placeholder="Ex : Commerce" required />
+                  <Label>Secteur d'activité</Label>
+                  <Select value={sector} onValueChange={setSector}>
+                    <SelectTrigger id="sector">
+                      <SelectValue placeholder="Choisir un secteur" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SECTORS.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {s.label}
+                        </SelectItem>
+                      ))}
+                      <SelectItem value={SECTOR_CUSTOM_VALUE}>
+                        + Ajouter une activité
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {sector === SECTOR_CUSTOM_VALUE && (
+                    <Input
+                      value={customSector}
+                      onChange={(e) => setCustomSector(e.target.value)}
+                      placeholder="Nom de l'activité (ex : Cabinet Comptable)"
+                    />
+                  )}
                 </div>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">

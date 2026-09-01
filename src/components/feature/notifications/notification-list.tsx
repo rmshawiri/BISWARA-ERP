@@ -28,6 +28,7 @@ export function NotificationList({ initial }: { initial: AppNotification[] }) {
       const res = await markReadAction(id);
       if (res.ok) {
         setItems((xs) => xs.map((x) => (x.id === id ? { ...x, isRead: true } : x)));
+        router.refresh(); // resynchronise le compteur non-lu (sidebar)
       } else toast.error(res.error ?? "Erreur");
     });
   }
@@ -37,6 +38,7 @@ export function NotificationList({ initial }: { initial: AppNotification[] }) {
       const res = await markAllReadAction();
       if (res.ok) {
         setItems((xs) => xs.map((x) => ({ ...x, isRead: true })));
+        router.refresh(); // resynchronise le compteur non-lu (sidebar)
       } else toast.error(res.error ?? "Erreur");
     });
   }

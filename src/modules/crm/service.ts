@@ -6,6 +6,7 @@ import { customers, opportunities } from "@/db/schema";
 import type { AuthzContext } from "@/types";
 import { hasPermission } from "@/server/rbac";
 import { logAudit } from "@/engines/audit";
+import { dispatchWebhook } from "@/engines/webhook";
 import { MODULES, type PermissionAction } from "@/lib/constants";
 import { err, ok, Result } from "@/lib/result";
 import { CreateCustomerInput, UpdateCustomerInput } from "./validation";
@@ -68,6 +69,13 @@ export async function createCustomer(
       entityType: "customer",
       entityId: row.id,
       newValue: { name: row.lastname, type: row.type },
+    });
+    // Webhook best-effort (non bloquant) : "Nouveau client".
+    void dispatchWebhook(orgId, "customer.created", {
+      id: row.id,
+      company: row.company,
+      name: row.lastname,
+      type: row.type,
     });
     return ok(row);
   } catch (e) {

@@ -24,7 +24,11 @@ const files = readdirSync(migrationsDir)
   .filter((f) => f.endsWith(".sql"))
   .sort();
 
-const client = new Client({ connectionString: url });
+// ⚠️ SSL : le certificat Supabase n'est pas signé par une CA publique, on
+// désactive la vérification (rejectUnauthorized:false). Le chiffrement TLS reste actif.
+// Ne PAS mettre `sslmode=require` dans l'URL : avec pg >= 8.16 il est traité
+// comme verify-full et entre en conflit avec l'objet `ssl` explicite.
+const client = new Client({ connectionString: url, ssl: { rejectUnauthorized: false } });
 await client.connect();
 
 try {

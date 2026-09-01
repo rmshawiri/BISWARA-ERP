@@ -4,14 +4,20 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 
 /**
- * Client Base de données (Drizzle + PostgreSQL direct).
+ * Client Base de données (Drizzle + PostgreSQL).
  *
  * ⚠️ RÉSERVÉ AU SERVEUR UNIQUEMENT.
  * - Ne jamais l'utiliser dans du code côté client.
  * - L'isolation multi-tenant DOIT être appliquée manuellement dans la
  *   couche service (filtre `organization_id`) en plus de la RLS.
  *
- * Connexion via DATABASE_URL (connexion directe Supabase, SSL requis).
+ * Connexion via DATABASE_URL (pooler Supabase, SSL requis).
+ * - Le certificat Supabase n'est pas signé par une CA publique, donc on
+ *   désactive la vérification du certificat (`rejectUnauthorized: false`).
+ *   ⚠️ À durcir avant la mise en production (attacher la CA Supabase ou
+ *   utiliser un tunnel privé). Le chiffrement TLS reste actif.
+ * - Ne pas mettre `sslmode=require` dans l'URL : avec pg >= 8.16, il est
+ *   traité comme `verify-full` et entre en conflit avec l'objet `ssl` stocké.
  */
 declare global {
   var __biswaraDb: ReturnType<typeof createDb> | undefined;
@@ -27,6 +33,7 @@ function createDb() {
     max: 10,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 10000,
+    ssl: { rejectUnauthorized: false },
   });
   return { pool, client: drizzle(pool) };
 }

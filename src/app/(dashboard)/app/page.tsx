@@ -20,8 +20,8 @@ import { KpiCard } from "@/components/feature/dashboard/kpi-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { formatCurrency } from "@/lib/utils";
 import { db } from "@/db";
-import { salesDocuments, products, customers, payments } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { salesDocuments, products, customers, payments, opportunities } from "@/db/schema";
+import { eq, and, ne } from "drizzle-orm";
 import type { LucideIcon } from "lucide-react";
 
 export const metadata: Metadata = { title: "Tableau de bord" };
@@ -36,7 +36,7 @@ type StatsItem = {
 };
 
 async function realStats(orgId: string, currency: string): Promise<StatsItem[]> {
-  const [rev, orders, prods, clients, pays] = await Promise.all([
+  const [rev, orders, prods, clients, pays, invoices, opps] = await Promise.all([
     db()
       .select({ total: salesDocuments.total })
       .from(salesDocuments)
@@ -51,22 +51,42 @@ async function realStats(orgId: string, currency: string): Promise<StatsItem[]> 
       .select({ amount: payments.amount })
       .from(payments)
       .where(eq(payments.organizationId, orgId)),
+    // Créances : factures non payées.
+    db()
+      .select({ total: salesDocuments.total })
+      .from(salesDocuments)
+      .where(
+        and(
+          eq(salesDocuments.organizationId, orgId),
+          eq(salesDocuments.type, "invoice"),
+          ne(salesDocuments.status, "paid")
+        )
+      ),
+    // Opportunités ouvertes (pipeline CRM).
+    db()
+      .select({ value: opportunities.value })
+      .from(opportunities)
+      .where(and(eq(opportunities.organizationId, orgId), eq(opportunities.status, "open"))),
   ]);
   const revenue = rev.reduce((s, r) => s + Number(r.total), 0);
   const collected = pays.reduce((s, p) => s + Number(p.amount), 0);
+  const receivables = invoices.reduce((s, r) => s + Number(r.total), 0);
+  const openOppsValue = opps.reduce((s, o) => s + Number(o.value ?? 0), 0);
   return [
     { icon: Wallet, label: "Chiffre d'affaires (facturé)", value: formatCurrency(revenue, currency), tone: "primary", change: { value: "" } },
     { icon: ShoppingCart, label: "Commandes", value: String(orders.length), tone: "violet" },
+    { icon: CreditCard, label: "Créances (factures impayées)", value: formatCurrency(receivables, currency), tone: "rose" },
+    { icon: TrendingUp, label: "Opportunités ouvertes", value: `${openOppsValue ? formatCurrency(openOppsValue, currency) : 0}`, tone: "amber" },
     { icon: Boxes, label: "Produits", value: String(prods.length), tone: "cyan" },
     { icon: Users, label: "Clients", value: String(clients.length), tone: "green" },
-    { icon: CreditCard, label: "Encaissé", value: formatCurrency(collected, currency), tone: "amber" },
+    { icon: CreditCard, label: "Encaissé", value: formatCurrency(collected, currency), tone: "primary" },
     { icon: TrendingUp, label: "CA moyen / commande", value: formatCurrency(orders.length ? Math.round(revenue / orders.length) : 0, currency), tone: "rose" },
   ];
 }
 
 export default async function DashboardPage() {
   const ctx = await getAuthzContext();
-  if (!ctx || ctx.superAdmin) redirect("/login");
+  if (!ctx || ctx.superAdmin || !ctx.organization) redirect("/login");
 
   const org = ctx.organization!;
   const currency = org.currency;
@@ -75,6 +95,7 @@ export default async function DashboardPage() {
   let recentActivity: { icon: LucideIcon; text: string; meta: string; tone: Tone }[] = [];
   let chart: number[] = [];
   let dayLabels: string[] = [];
+  let dbReady = true;
 
   try {
     stats = await realStats(org.id, currency);
@@ -114,7 +135,8 @@ export default async function DashboardPage() {
     chart = buckets.map((b) => Math.round((b.total / max) * 100));
     dayLabels = buckets.map((b) => b.label);
   } catch {
-    // garde-fou : pas de données
+    // garde-fou : base indisponible → on ne casse pas la page, on l'indique.
+    dbReady = false;
   }
 
   return (
@@ -140,6 +162,16 @@ export default async function DashboardPage() {
           </Link>
         </div>
       </div>
+
+      {!dbReady && (
+        <Card>
+          <CardContent className="p-5 text-sm text-muted-foreground">
+            ⚠️ Les données du tableau de bord sont momentanément indisponibles.
+            Le tableau de bord réapparaîtra automatiquement dès que la connexion
+            à la base de données sera rétablie.
+          </CardContent>
+        </Card>
+      )}
 
       {/* KPIs */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
