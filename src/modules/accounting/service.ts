@@ -370,6 +370,41 @@ export async function autoPostSalesEntry(ctx: AuthzContext, amount: number, labe
   }
 }
 
+/** Écriture automatique : encaissement client (débit caisse/banque, crédit créance client). */
+export async function autoPostPaymentEntry(ctx: AuthzContext, amount: number, label: string) {
+  const orgId = ctx.organization!.id;
+  const journal = await defaultJournal(ctx, orgId);
+  if (!journal) return err("Comptabilité non configurée (journal).");
+  try {
+    // Le compte « client » est le compte actif retenu à la validation (premier actif).
+    const receivables = await pickAccount(ctx, orgId, "asset");
+    if (!receivables) return err("Aucun compte actif (créance client).");
+
+    // Compte de caisse/banque : un actif différent, en privilégiant un nom financier.
+    const allAssets = await db()
+      .select()
+      .from(chartOfAccounts)
+      .where(and(eq(chartOfAccounts.organizationId, orgId), eq(chartOfAccounts.type, "asset")));
+    const cashLike = allAssets.find((a) => a.id !== receivables.id && /caisse|banque|bank|cash|mvola|holo|wakati|compte/.test(`${a.label} ${a.number ?? ""}`));
+    const cash = cashLike ?? allAssets.find((a) => a.id !== receivables.id) ?? null;
+    if (!cash) return err("Aucun compte de caisse/banque distinct disponible ; apurement ignoré.");
+
+    const res = await createJournalEntry(ctx, {
+      journalId: journal.id,
+      date: new Date().toISOString().slice(0, 10),
+      label,
+      lines: [
+        { account: cash.id, label: "Encaissement client", debit: amount, credit: 0 },
+        { account: receivables.id, label: "Client — apurement créance", debit: 0, credit: amount },
+      ],
+      sourceModule: "sales",
+    });
+    return res;
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur d'écriture auto");
+  }
+}
+
 /** Écriture automatique : achats (débit charge, crédit fournisseur/passif). */
 export async function autoPostPurchaseEntry(ctx: AuthzContext, amount: number, label: string) {
   const orgId = ctx.organization!.id;

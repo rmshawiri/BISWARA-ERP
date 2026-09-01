@@ -10,7 +10,7 @@ import { MODULES, type PermissionAction } from "@/lib/constants";
 import { err, ok, Result } from "@/lib/result";
 import { buildDocumentNumber } from "@/lib/numbering";
 import { allocatePayment } from "@/modules/finance/logic";
-import { autoPostSalesEntry } from "@/modules/accounting";
+import { autoPostSalesEntry, autoPostPaymentEntry } from "@/modules/accounting";
 import { notifyOrgUsers } from "@/engines/notify-org";
 import {
   CreateSalesDocumentInput,
@@ -361,6 +361,11 @@ export async function recordPayment(
           notes: `Encaissement ${doc.number}`,
         });
       }
+    } catch { /* non bloquant */ }
+
+    // I4 — Apurement comptable de la créance client (débit caisse, crédit client).
+    try {
+      await autoPostPaymentEntry(ctx, Number(input.amount), `Encaissement ${doc.number}`);
     } catch { /* non bloquant */ }
 
     return ok({ payment, remaining: alloc.remaining, status: newStatus });
