@@ -713,3 +713,62 @@ export async function updateUserRole(
     return err(e instanceof Error ? e.message : "Erreur de mise à jour");
   }
 }
+
+/** Liste les comptes Super Admin (gestion des administrateurs plateforme). */
+export async function listSuperAdmins(
+  ctx: AuthzContext
+): Promise<Result<typeof profiles.$inferSelect[]>> {
+  requireSuperAdmin(ctx);
+  try {
+    const rows = await db()
+      .select()
+      .from(profiles)
+      .where(eq(profiles.role, "super_admin"))
+      .orderBy(profiles.createdAt);
+    return ok(rows);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de lecture");
+  }
+}
+
+/** Crée un compte Super Admin (accès plateforme). */
+export async function createSuperAdmin(
+  ctx: AuthzContext,
+  input: { email: string; fullName: string; username: string }
+): Promise<Result<{ temporaryPassword: string }>> {
+  requireSuperAdmin(ctx);
+  try {
+    const temporaryPassword = `Bwr-${Math.random().toString(36).slice(2, 12)}`;
+    const admin = createAdminClient();
+    const { data: created, error: userErr } = await admin.auth.admin.createUser({
+      email: input.email,
+      password: temporaryPassword,
+      email_confirm: true,
+      user_metadata: { username: input.username, full_name: input.fullName },
+    });
+    if (userErr || !created?.user) return err("Création du compte impossible.");
+    const { error: profileErr } = await admin
+      .from("profiles")
+      .upsert({
+        id: created.user.id,
+        username: input.username,
+        full_name: input.fullName,
+        email: input.email,
+        role: "super_admin",
+        status: "active",
+      });
+    if (profileErr) return err("Création du profil impossible.");
+    await logAudit({
+      userId: ctx.user.id,
+      userName: ctx.user.fullName,
+      module: "admin",
+      action: "admin.create",
+      entityType: "profile",
+      entityId: created.user.id,
+      newValue: { username: input.username, role: "super_admin" },
+    });
+    return ok({ temporaryPassword });
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de création");
+  }
+}

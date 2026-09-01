@@ -10,6 +10,7 @@ import {
   resetUserPassword,
   createOrganizationByAdmin,
   updateUserRole,
+  createSuperAdmin,
   setSubscriptionTrial,
   setSubscriptionDiscount,
   recordSubscriptionPayment,
@@ -151,5 +152,20 @@ export async function updateSubscriptionPaymentStatusAction(
     revalidatePath("/admin/paiements");
     revalidatePath("/admin/revenus");
   }
+  return res;
+}
+
+export async function createSuperAdminAction(payload: {
+  email: string;
+  fullName: string;
+  username: string;
+}): Promise<Result<unknown>> {
+  const ctx = await requireCtx();
+  if (!ctx || !ctx.superAdmin) return { ok: false, error: "Accès refusé." };
+  if (!payload.email?.trim() || !payload.fullName?.trim() || !payload.username?.trim()) {
+    return { ok: false, error: "E-mail, nom et identifiant requis." };
+  }
+  const res = await createSuperAdmin(ctx, payload);
+  if (res.ok) revalidatePath("/admin/superadmins");
   return res;
 }
