@@ -1,8 +1,8 @@
 import "server-only";
 
-import { eq, and, like, sql } from "drizzle-orm";
+import { eq, and, like, sql, inArray } from "drizzle-orm";
 import { db } from "@/db";
-import { salesDocuments, salesDocumentLines, payments, stockMovements, financialTransactions, accounts } from "@/db/schema";
+import { salesDocuments, salesDocumentLines, payments, stockMovements, financialTransactions, accounts, products, warehouses } from "@/db/schema";
 import type { AuthzContext } from "@/types";
 import { hasPermission } from "@/server/rbac";
 import { logAudit } from "@/engines/audit";
@@ -17,6 +17,7 @@ import {
   computeTotals,
   type ComputedTotals,
 } from "./validation";
+import { buildSalesPosting } from "./orchestration";
 
 const PREFIX: Record<string, string> = {
   quote: "DEV",
@@ -206,36 +207,66 @@ export async function updateDocumentStatus(
       entityId: id,
       newValue: { status: next },
     });
-    // Génération automatique d'écriture comptable à la validation (best-effort).
-    if (next === "validated" && doc.type === "invoice") {
-      try {
-        await autoPostSalesEntry(ctx, Number(doc.total), `Facture ${doc.number}`);
-      } catch {
-        // Non bloquant : la comptabilité doit être configurée pour fonctionner.
-      }
-    }
-    // Décrément automatique du stock à la validation d'une facture (I1).
+    // --- AUTOMATISATION INTER-MODULES (I1) : facture validée → compta + stock ---
     if (next === "validated" && doc.type === "invoice") {
       try {
         const lines = await db()
           .select()
           .from(salesDocumentLines)
           .where(eq(salesDocumentLines.documentId, id));
-        const date = new Date().toISOString().slice(0, 10);
-        for (const l of lines) {
-          if (l.productId) {
+
+        // Carte produit → est-ce un service ? (un service ne génère pas de mouvement de stock)
+        const productIds = lines.map((l) => l.productId).filter((p): p is string => !!p);
+        const isServiceMap: Record<string, boolean> = {};
+        if (productIds.length > 0) {
+          const dbProducts = await db()
+            .select({ id: products.id, isService: products.isService })
+            .from(products)
+            .where(inArray(products.id, productIds));
+          for (const p of dbProducts) isServiceMap[p.id] = p.isService;
+        }
+
+        const plan = buildSalesPosting(
+          { subtotal: Number(doc.subtotal), taxTotal: Number(doc.taxTotal), discount: Number(doc.discount), total: Number(doc.total) },
+          lines.map((l) => ({
+            productId: l.productId,
+            description: l.description,
+            quantity: Number(l.quantity),
+            unitPrice: Number(l.unitPrice),
+            taxRate: Number(l.taxRate),
+          })),
+          isServiceMap
+        );
+
+        // 1. Sortie de stock (produits physiques uniquement, dépôt par défaut si présent).
+        if (plan.stockOuts.length > 0) {
+          const [defaultWarehouse] = await db()
+            .select({ id: warehouses.id })
+            .from(warehouses)
+            .where(and(eq(warehouses.organizationId, orgId), eq(warehouses.status, "active")))
+            .orderBy(warehouses.name)
+            .limit(1);
+          const date = new Date().toISOString().slice(0, 10);
+          for (const so of plan.stockOuts) {
             await db().insert(stockMovements).values({
               organizationId: orgId,
-              productId: l.productId,
+              productId: so.productId,
+              warehouseId: defaultWarehouse?.id ?? null,
               type: "out",
-              quantity: l.quantity,
+              quantity: so.quantity,
               reference: doc.number,
               date,
             });
           }
         }
-      } catch {
-        // Non bloquant.
+
+        // 2. Écriture comptable (client / revenus / TVA collectée).
+        try {
+          await autoPostSalesEntry(ctx, Number(doc.total), `Facture ${doc.number}`, Number(doc.taxTotal));
+        } catch {}
+      } catch (e) {
+        // Non bloquant : la validation demeure, mais on trace la dérive.
+        console.error("[sales] Échec de l'automatisation inter-modules :", e);
       }
     }
     return ok(row!);

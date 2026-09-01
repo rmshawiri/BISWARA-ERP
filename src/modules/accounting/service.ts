@@ -336,22 +336,32 @@ async function pickAccount(ctx: AuthzContext, orgId: string, type: string) {
   return rows[0] ?? null;
 }
 
-/** Écriture automatique : ventes (débit actif, crédit produit). */
-export async function autoPostSalesEntry(ctx: AuthzContext, amount: number, label: string) {
+/** Écriture automatique : ventes (débit client, crédit produits + TVA collectée). */
+export async function autoPostSalesEntry(ctx: AuthzContext, amount: number, label: string, taxAmount = 0) {
   const orgId = ctx.organization!.id;
   const journal = await defaultJournal(ctx, orgId);
   const asset = await pickAccount(ctx, orgId, "asset");
   const revenue = await pickAccount(ctx, orgId, "revenue");
   if (!journal || !asset || !revenue) return err("Comptabilité non configurée (journal + comptes actif/produit).");
   try {
+    // Répartition HT / TVA si un compte de passif (TVA collectée) est disponible.
+    const tax = Math.max(0, Number(taxAmount));
+    const net = Number(amount) - tax;
+    const liability = tax > 0 ? await pickAccount(ctx, orgId, "liability") : null;
+    const lines: EntryLine[] = [
+      { account: asset.id, label: "Encaissement client", debit: amount, credit: 0 },
+      ...(liability && net >= 0
+        ? [
+            { account: revenue.id, label: "Ventes (HT)", debit: 0, credit: net },
+            { account: liability.id, label: "TVA collectée", debit: 0, credit: tax },
+          ]
+        : [{ account: revenue.id, label: "Ventes", debit: 0, credit: amount }]),
+    ];
     const res = await createJournalEntry(ctx, {
       journalId: journal.id,
       date: new Date().toISOString().slice(0, 10),
       label,
-      lines: [
-        { account: asset.id, label: "Encaissement client", debit: amount, credit: 0 },
-        { account: revenue.id, label: "Ventes", debit: 0, credit: amount },
-      ],
+      lines,
       sourceModule: "sales",
     });
     return res;
