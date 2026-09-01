@@ -21,7 +21,7 @@ export default async function OnboardingPage() {
 
   return (
     <div className="dark relative flex min-h-screen flex-col items-center justify-center bg-[#05060f] px-4 py-12 text-white">
-      <div className="pointer-events-none absolute inset-0 opacity-40 [background:radial-gradient(60%_50%_at_50%_-10%,rgba(124,92,255,0.35),transparent),radial-gradient(50%_40%_at_100%_100%,rgba(34,211,238,0.15),transparent)]" />
+      <div className="pointer-events-none absolute inset-0 opacity-40 [background:radial-gradient(60%_50%_at_50%_-10%,rgba(46,134,255,0.35),transparent),radial-gradient(50%_40%_at_100%_100%,rgba(34,211,238,0.15),transparent)]" />
       <div className="relative mb-8">
         <BiswaraLogo variant="dark" />
       </div>

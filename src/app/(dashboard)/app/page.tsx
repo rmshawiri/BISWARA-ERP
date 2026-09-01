@@ -120,7 +120,7 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Hero */}
-      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#6d3be8] via-[#7c5cff] to-[#22d3ee] p-6 text-white shadow-card sm:p-8">
+      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#0A3A7A] via-[#2E86FF] to-[#22d3ee] p-6 text-white shadow-card sm:p-8">
         <div className="pointer-events-none absolute inset-0 opacity-30 [background:radial-gradient(50%_60%_at_80%_0%,rgba(255,255,255,0.35),transparent)]" />
         <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>

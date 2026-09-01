@@ -46,7 +46,7 @@ export function FaqAccordion({ faqs = defaultFaqs }: { faqs?: FaqItem[] }) {
         <AccordionItem
           key={f.q}
           value={f.q}
-          className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] px-5 data-[state=open]:border-[rgba(124,92,255,0.35)]"
+          className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] px-5 data-[state=open]:border-[rgba(46,134,255,0.35)]"
         >
           <AccordionTrigger className="py-5 text-left text-base font-semibold text-[var(--aurora-ink)] hover:no-underline">
             <span className="pr-4">{f.q}</span>

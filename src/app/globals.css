@@ -18,16 +18,16 @@
     --aurora-glass-bg: rgba(255, 255, 255, 0.045);
     --aurora-glass-bg-strong: rgba(255, 255, 255, 0.07);
     --aurora-glass-border: rgba(255, 255, 255, 0.09);
-    --aurora-grad: linear-gradient(120deg, #7c5cff 0%, #22d3ee 50%, #ff4ecd 100%);
-    --aurora-grad-full: linear-gradient(120deg, #7c5cff 0%, #22d3ee 45%, #ff4ecd 70%, #7c5cff 100%);
-    --aurora-grad-text: linear-gradient(110deg, #a08cff 0%, #22d3ee 45%, #ff4ecd 90%);
+    --aurora-grad: linear-gradient(120deg, #2e86ff 0%, #22d3ee 50%, #ffd700 100%);
+    --aurora-grad-full: linear-gradient(120deg, #2e86ff 0%, #22d3ee 45%, #ffd700 70%, #2e86ff 100%);
+    --aurora-grad-text: linear-gradient(110deg, #4ba3ff 0%, #22d3ee 45%, #ffd700 90%);
 
-    /* Couleurs d'accent BISWARA — palette « aurora » de référence (violet/c/rose) */
-    --bwr-violet: #7c5cff;
+    /* Couleurs d'accent BISWARA — palette « aurora » ancrée sur le bleu officiel */
+    --bwr-blue: #2e86ff;
+    --bwr-blue-deep: #003366;
     --bwr-cyan: #22d3ee;
-    --bwr-pink: #ff4ecd;
-    --bwr-gold: #fbbf24;
-    --bwr-green: #34d399;
+    --bwr-gold: #ffd700;
+    --bwr-green: #00a859;
 
     --background: 210 40% 98%; /* slate-50 */
     --foreground: 224 71% 4%; /* slate-950 */
@@ -36,30 +36,30 @@
     --popover: 0 0% 100%;
     --popover-foreground: 224 71% 4%;
 
-    --primary: 252 100% 68%; /* violet de référence #7c5cff */
+    --primary: 221 83% 53%; /* bleu électrique BISWARA #2563eb (thème clair) */
     --primary-foreground: 0 0% 100%;
-    --primary-deep: 252 100% 54%;
+    --primary-deep: 221 83% 40%;
     --secondary: 220 14% 96%; /* slate-100 */
     --secondary-foreground: 224 71% 8%;
     --muted: 215 20% 94%;
     --muted-foreground: 219 11% 46%;
-    --accent: 252 100% 96%;
-    --accent-foreground: 252 100% 35%;
+    --accent: 215 90% 94%;
+    --accent-foreground: 221 70% 35%;
     --destructive: 349 80% 55%; /* rose-500 */
     --destructive-foreground: 0 0% 100%;
 
-    --success: 152 76% 40%; /* emerald-600 */
+    --success: 152 76% 40%; /* vert BISWARA */
     --warning: 38 92% 50%; /* amber-500 */
-    --info: 188 86% 53%; /* cyan-500 #22d3ee */
+    --info: 200 90% 50%; /* cyan/bleu clair */
 
     --border: 220 15% 90%;
     --input: 220 15% 88%;
-    --ring: 252 100% 68%;
+    --ring: 221 83% 53%;
 
     --radius: 0.75rem;
 
-    /* dégradé de marque — violet → cyan → rose (référence) */
-    --grad-brand: linear-gradient(135deg, #7c5cff 0%, #22d3ee 55%, #ff4ecd 100%);
+    /* dégradé de marque — bleu électrique → cyan → or BISWARA */
+    --grad-brand: linear-gradient(135deg, #2e86ff 0%, #22d3ee 55%, #ffd700 100%);
     --shadow-soft: 0 1px 2px rgba(15, 23, 42, 0.04),
       0 4px 16px rgba(15, 23, 42, 0.06);
   }
@@ -72,25 +72,25 @@
     --popover: 224 30% 9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 252 100% 70%; /* violet de référence (clair) */
+    --primary: 215 100% 60%; /* bleu électrique BISWARA #2e86ff */
     --primary-foreground: 226 40% 8%;
-    --primary-deep: 252 100% 60%;
+    --primary-deep: 215 100% 24%;
     --secondary: 220 20% 15%;
     --secondary-foreground: 210 40% 98%;
     --muted: 218 20% 16%;
     --muted-foreground: 215 20% 65%;
-    --accent: 252 40% 24%;
+    --accent: 215 55% 26%;
     --accent-foreground: 210 40% 92%;
     --destructive: 350 70% 55%;
     --destructive-foreground: 0 0% 98%;
 
     --success: 152 76% 45%;
     --warning: 38 92% 55%;
-    --info: 188 86% 53%;
+    --info: 200 90% 55%;
 
     --border: 217 33% 22%;
     --input: 217 33% 22%;
-    --ring: 252 100% 70%;
+    --ring: 215 100% 60%;
 
     --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.4),
       0 8px 24px rgba(0, 0, 0, 0.4);
@@ -205,8 +205,8 @@
 
   /* Pastille dégradée de marque (icônes) */
   .aurora-chip {
-    background: linear-gradient(140deg, rgba(124, 92, 255, 0.18), rgba(34, 211, 238, 0.12));
-    border: 1px solid rgba(124, 92, 255, 0.3);
+    background: linear-gradient(140deg, rgba(46, 134, 255, 0.18), rgba(34, 211, 238, 0.12));
+    border: 1px solid rgba(46, 134, 255, 0.3);
   }
 
   /* Étiquette de section (pillule avec point pulsant) */

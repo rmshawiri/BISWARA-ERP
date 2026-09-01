@@ -100,7 +100,7 @@ export default function SignupPage() {
     <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4 py-12">
       <div className="w-full max-w-lg">
         <Link href="/" className="mb-8 flex justify-center">
-          <BiswaraLogo />
+          <BiswaraLogo variant="dark" />
         </Link>
         <Card>
           <CardHeader className="text-center">

@@ -37,7 +37,7 @@ export function PublicFooter() {
     <footer className="relative border-t border-white/10 bg-[#05060f]">
       {/* lueur supérieure */}
       <div
-        className="pointer-events-none absolute inset-x-0 -top-24 h-48 bg-[radial-gradient(ellipse_60%_100%_at_50%_0%,rgba(124,92,255,0.16),transparent_70%)]"
+        className="pointer-events-none absolute inset-x-0 -top-24 h-48 bg-[radial-gradient(ellipse_60%_100%_at_50%_0%,rgba(46,134,255,0.16),transparent_70%)]"
         aria-hidden="true"
       />
       <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">

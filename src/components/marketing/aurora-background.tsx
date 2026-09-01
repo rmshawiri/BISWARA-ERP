@@ -21,7 +21,7 @@ export function AuroraBackground({ className }: { className?: string }) {
     const ctx = canvas.getContext("2d", { alpha: true });
     if (!ctx) return;
 
-    const COLORS = ["124, 92, 255", "255, 78, 205", "34, 211, 238"];
+    const COLORS = ["46, 134, 255", "255, 215, 0", "34, 211, 238"];
     const LINK_DIST = 120;
     const MOUSE_RADIUS = 170;
     const DPR = Math.min(window.devicePixelRatio || 1, 2);
@@ -131,7 +131,7 @@ export function AuroraBackground({ className }: { className?: string }) {
           const d2 = dx * dx + dy * dy;
           if (d2 < LINK_DIST * LINK_DIST) {
             const alpha = (1 - Math.sqrt(d2) / LINK_DIST) * 0.35;
-            ctx.strokeStyle = `rgba(124, 92, 255, ${alpha})`;
+            ctx.strokeStyle = `rgba(46, 134, 255, ${alpha})`;
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(a.x, a.y);
@@ -220,7 +220,7 @@ export function AuroraBackground({ className }: { className?: string }) {
       <div
         className="absolute -left-[15%] -top-[20%] h-[55vmax] w-[55vmax] rounded-full blur-[90px]"
         style={{
-          background: "radial-gradient(circle, rgba(124,92,255,.5), transparent 65%)",
+          background: "radial-gradient(circle, rgba(46,134,255,.5), transparent 65%)",
           animation: "aurora-drift 22s ease-in-out infinite alternate",
         }}
       />
@@ -234,7 +234,7 @@ export function AuroraBackground({ className }: { className?: string }) {
       <div
         className="absolute bottom-[-25%] left-[30%] h-[40vmax] w-[40vmax] rounded-full blur-[90px]"
         style={{
-          background: "radial-gradient(circle, rgba(255,78,205,.4), transparent 65%)",
+          background: "radial-gradient(circle, rgba(255,215,0,.4), transparent 65%)",
           animation: "aurora-drift 30s ease-in-out infinite alternate",
         }}
       />

@@ -31,8 +31,8 @@ const contactMethods = [
     Icon: Mail,
     label: "E-mail",
     value: siteConfig.email,
-    accent: "text-[var(--bwr-violet,#7c5cff)]",
-    bg: "border-[rgba(255,78,205,0.2)] bg-[rgba(255,78,205,0.1)]",
+    accent: "text-[var(--bwr-violet,#2E86FF)]",
+    bg: "border-[rgba(255,215,0,0.2)] bg-[rgba(255,215,0,0.1)]",
     href: `mailto:${siteConfig.email}`,
   },
   {
@@ -58,7 +58,7 @@ export default function ContactPage() {
   return (
     <div className="relative overflow-hidden">
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(ellipse_70%_100%_at_50%_0%,rgba(255,78,205,0.18),transparent_70%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(ellipse_70%_100%_at_50%_0%,rgba(255,215,0,0.18),transparent_70%)]"
         aria-hidden="true"
       />
       <div className="relative mx-auto max-w-4xl px-4 py-24 sm:px-6 lg:px-8">
@@ -100,7 +100,7 @@ export default function ContactPage() {
               className="pointer-events-none absolute inset-0 -z-10"
               style={{
                 background:
-                  "radial-gradient(circle, rgba(124,92,255,0.25), transparent 60%), radial-gradient(circle at 80% 20%, rgba(34,211,238,0.2), transparent 55%)",
+                  "radial-gradient(circle, rgba(46,134,255,0.25), transparent 60%), radial-gradient(circle at 80% 20%, rgba(34,211,238,0.2), transparent 55%)",
               }}
             />
             <h2 className="font-display text-2xl font-bold text-white">
@@ -110,7 +110,7 @@ export default function ContactPage() {
               Écrivez-nous sur WhatsApp et notre équipe vous présente BISWARA adapté à votre secteur.
             </p>
             <a href={waDemo} target="_blank" rel="noopener noreferrer" className="mt-6 inline-block">
-              <Button size="lg" className="buttons-aurora-grad text-white shadow-[0_12px_40px_rgba(124,92,255,0.4)] hover:opacity-95">
+              <Button size="lg" className="buttons-aurora-grad text-white shadow-[0_12px_40px_rgba(46,134,255,0.4)] hover:opacity-95">
                 <MessageCircle className="h-4 w-4" />
                 Demander une démonstration
                 <ArrowRight className="h-4 w-4" />

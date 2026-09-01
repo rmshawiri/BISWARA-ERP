@@ -62,6 +62,10 @@ export const metadata: Metadata = {
     follow: true,
   },
   manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/logo/favicon.png",
+    apple: "/logo/favicon.png",
+  },
 };
 
 export const viewport: Viewport = {

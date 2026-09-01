@@ -102,7 +102,7 @@ const testimonials = [
     name: "Amina M.",
     role: "Gérante, Boutique — Moroni",
     initials: "AM",
-    grad: "from-[#7c5cff] to-[#22d3ee]",
+    grad: "from-[#2E86FF] to-[#22d3ee]",
     metric: "Temps de gestion",
     metricValue: "−40%",
   },
@@ -112,7 +112,7 @@ const testimonials = [
     name: "Youssouf A.",
     role: "Directeur, Supermarché — Mutsamudu",
     initials: "YA",
-    grad: "from-[#22d3ee] to-[#7c5cff]",
+    grad: "from-[#22d3ee] to-[#2E86FF]",
     metric: "Visibilité financière",
     metricValue: "Temps réel",
   },
@@ -122,7 +122,7 @@ const testimonials = [
     name: "Nassira S.",
     role: "Responsable, Pharmacie — Fomboni",
     initials: "NS",
-    grad: "from-[#ff4ecd] to-[#7c5cff]",
+    grad: "from-[#FFD700] to-[#2E86FF]",
     metric: "RuPTures de stock",
     metricValue: "−60%",
   },
@@ -153,7 +153,7 @@ export default function LandingPage() {
           <div className="space-y-7">
             <Reveal direction="fade">
               <span className="aurora-tag">
-                <Sparkles className="h-3.5 w-3.5 text-[var(--bwr-violet,#7c5cff)]" />
+                <Sparkles className="h-3.5 w-3.5 text-[var(--bwr-violet,#2E86FF)]" />
                 ERP SaaS sécurisé, multi-tenant & adapté à l'Afrique
               </span>
             </Reveal>
@@ -178,7 +178,7 @@ export default function LandingPage() {
                 <a href={waDemo} target="_blank" rel="noopener noreferrer">
                   <Button
                     size="lg"
-                    className="group buttons-aurora-grad w-full text-white shadow-[0_12px_40px_rgba(124,92,255,0.35)] hover:opacity-95 hover:shadow-[0_18px_50px_rgba(124,92,255,0.45)] sm:w-auto"
+                    className="group buttons-aurora-grad w-full text-white shadow-[0_12px_40px_rgba(46,134,255,0.35)] hover:opacity-95 hover:shadow-[0_18px_50px_rgba(46,134,255,0.45)] sm:w-auto"
                   >
                     Demander une démonstration
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -188,7 +188,7 @@ export default function LandingPage() {
                   <Button
                     size="lg"
                     variant="ghost"
-                    className="w-full border border-white/15 bg-white/5 text-white backdrop-blur-md hover:border-[rgba(124,92,255,0.55)] hover:bg-white/10 sm:w-auto"
+                    className="w-full border border-white/15 bg-white/5 text-white backdrop-blur-md hover:border-[rgba(46,134,255,0.55)] hover:bg-white/10 sm:w-auto"
                   >
                     Voir les tarifs
                   </Button>
@@ -218,7 +218,7 @@ export default function LandingPage() {
                 <div className="rounded-[28px] border border-white/10 bg-gradient-to-br from-white/10 to-white/[0.02] p-6 backdrop-blur-xl shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
                   <div className="flex items-center gap-3">
                     <div className="flex gap-1.5" aria-hidden="true">
-                      <span className="h-2.5 w-2.5 rounded-full bg-[#7c5cff]" />
+                      <span className="h-2.5 w-2.5 rounded-full bg-[#2E86FF]" />
                       <span className="h-2.5 w-2.5 rounded-full bg-[#22d3ee]" />
                       <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
                     </div>
@@ -252,11 +252,11 @@ export default function LandingPage() {
                     <svg viewBox="0 0 320 110" preserveAspectRatio="none" className="w-full">
                       <defs>
                         <linearGradient id="bwrChartFill" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0" stopColor="#7c5cff" stopOpacity="0.35" />
-                          <stop offset="1" stopColor="#7c5cff" stopOpacity="0" />
+                          <stop offset="0" stopColor="#2E86FF" stopOpacity="0.35" />
+                          <stop offset="1" stopColor="#2E86FF" stopOpacity="0" />
                         </linearGradient>
                         <linearGradient id="bwrChartStroke" x1="0" y1="0" x2="1" y2="0">
-                          <stop offset="0" stopColor="#7c5cff" />
+                          <stop offset="0" stopColor="#2E86FF" />
                           <stop offset="1" stopColor="#22d3ee" />
                         </linearGradient>
                       </defs>
@@ -283,7 +283,7 @@ export default function LandingPage() {
                     {[40, 65, 48, 80, 58, 92, 72].map((h, i) => (
                       <span
                         key={i}
-                        className="flex-1 rounded-t bg-gradient-to-t from-[#7c5cff]/80 to-[#22d3ee]/50"
+                        className="flex-1 rounded-t bg-gradient-to-t from-[#2E86FF]/80 to-[#22d3ee]/50"
                         style={{ height: `${h * 0.5}px` }}
                       />
                     ))}
@@ -292,7 +292,7 @@ export default function LandingPage() {
 
                 {/* KPI flottants */}
                 <div className="absolute -left-6 -top-5 flex items-center gap-2.5 rounded-xl border border-white/10 bg-[#0a0d1f]/80 p-3 backdrop-blur-md shadow-[0_12px_40px_rgba(0,0,0,0.35)] [animation:aurora-float_6s_ease-in-out_infinite]">
-                  <span className="grid h-9 w-9 place-items-center rounded-lg bg-[rgba(124,92,255,0.15)] text-[#a08cff]">
+                  <span className="grid h-9 w-9 place-items-center rounded-lg bg-[rgba(46,134,255,0.15)] text-[#4BA3FF]">
                     <Wallet className="h-4 w-4" />
                   </span>
                   <div>
@@ -310,7 +310,7 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <div className="absolute -bottom-5 left-[14%] flex items-center gap-2.5 rounded-xl border border-white/10 bg-[#0a0d1f]/80 p-3 backdrop-blur-md shadow-[0_12px_40px_rgba(0,0,0,0.35)] [animation:aurora-float_6s_ease-in-out_infinite;animation-delay:2.4s]">
-                  <span className="grid h-9 w-9 place-items-center rounded-lg bg-[rgba(255,78,205,0.15)] text-[#a08cff]">
+                  <span className="grid h-9 w-9 place-items-center rounded-lg bg-[rgba(255,215,0,0.15)] text-[#4BA3FF]">
                     <Boxes className="h-4 w-4" />
                   </span>
                   <div>
@@ -374,7 +374,7 @@ export default function LandingPage() {
             {advantages.map((a, i) => (
               <Reveal key={a.title} delay={i * 120}>
                 <TiltCard max={5}>
-                  <div className="group h-full rounded-2xl border border-white/10 bg-white/[0.03] p-7 backdrop-blur-md transition-all duration-500 hover:border-[rgba(124,92,255,0.4)] hover:bg-white/[0.05] hover:shadow-[0_24px_70px_rgba(124,92,255,0.22)]">
+                  <div className="group h-full rounded-2xl border border-white/10 bg-white/[0.03] p-7 backdrop-blur-md transition-all duration-500 hover:border-[rgba(46,134,255,0.4)] hover:bg-white/[0.05] hover:shadow-[0_24px_70px_rgba(46,134,255,0.22)]">
                     <div className="aurora-chip grid h-14 w-14 place-items-center rounded-2xl text-[var(--bwr-cyan,#22d3ee)] transition-transform duration-500 group-hover:-translate-y-1 group-hover:scale-105">
                       <a.icon className="h-6 w-6" />
                     </div>
@@ -406,11 +406,11 @@ export default function LandingPage() {
             {modules.map((m, i) => (
               <Reveal key={m.title} delay={(i % 3) * 100}>
                 <TiltCard max={4}>
-                  <div className="group relative h-full overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-md transition-all duration-500 hover:border-transparent hover:bg-gradient-to-br hover:from-[rgba(124,92,255,0.1)] hover:to-[rgba(16,20,43,0.6)] hover:shadow-[0_24px_70px_rgba(124,92,255,0.25)]">
+                  <div className="group relative h-full overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-6 backdrop-blur-md transition-all duration-500 hover:border-transparent hover:bg-gradient-to-br hover:from-[rgba(46,134,255,0.1)] hover:to-[rgba(16,20,43,0.6)] hover:shadow-[0_24px_70px_rgba(46,134,255,0.25)]">
                     <span className="pointer-events-none absolute right-1.5 top-1 font-display text-5xl font-bold text-transparent [-webkit-text-stroke:1px_rgba(255,255,255,0.12)] transition-colors group-hover:text-[rgba(34,211,238,0.35)]">
                       {String(i + 1).padStart(2, "0")}
                     </span>
-                    <div className="aurora-chip grid h-12 w-12 place-items-center rounded-xl text-[var(--bwr-violet,#7c5cff)] transition-transform duration-500 group-hover:-translate-y-1 group-hover:rotate-3 group-hover:scale-105 group-hover:text-[#22d3ee]">
+                    <div className="aurora-chip grid h-12 w-12 place-items-center rounded-xl text-[var(--bwr-violet,#2E86FF)] transition-transform duration-500 group-hover:-translate-y-1 group-hover:rotate-3 group-hover:scale-105 group-hover:text-[#22d3ee]">
                       <m.icon className="h-5 w-5" />
                     </div>
                     <h3 className="mt-4 font-display text-lg font-semibold text-white">{m.title}</h3>
@@ -443,7 +443,7 @@ export default function LandingPage() {
             {sectors.map((s, i) => (
               <Reveal key={s} direction="zoom" delay={(i % 6) * 60}>
                 <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-5 py-2.5 text-sm font-medium text-[var(--aurora-muted)] backdrop-blur-md transition-colors duration-300 hover:border-[rgba(34,211,238,0.4)] hover:text-white">
-                  <Globe className="h-3.5 w-3.5 text-[var(--bwr-violet,#7c5cff)]" />
+                  <Globe className="h-3.5 w-3.5 text-[var(--bwr-violet,#2E86FF)]" />
                   {s}
                 </span>
               </Reveal>
@@ -466,7 +466,7 @@ export default function LandingPage() {
             {steps.map((s, i) => (
               <Reveal key={s.n} delay={i * 120}>
                 <div className="relative h-full rounded-2xl border border-white/10 bg-white/[0.03] p-7 backdrop-blur-md">
-                  <span className="font-display text-4xl font-bold text-transparent [-webkit-text-stroke:1px_rgba(124,92,255,0.4)]">
+                  <span className="font-display text-4xl font-bold text-transparent [-webkit-text-stroke:1px_rgba(46,134,255,0.4)]">
                     {s.n}
                   </span>
                   <h3 className="mt-4 font-display text-lg font-semibold text-white">{s.title}</h3>
@@ -495,9 +495,9 @@ export default function LandingPage() {
             {testimonials.map((t, i) => (
               <Reveal key={t.name} delay={i * 120}>
                 <TiltCard max={4}>
-                  <div className="relative flex h-full flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-7 backdrop-blur-md transition-shadow duration-500 hover:border-[rgba(124,92,255,0.3)] hover:shadow-[0_20px_60px_rgba(124,92,255,0.2)]">
-                    <span className="pointer-events-none absolute right-4 top-1 font-display text-6xl text-transparent [-webkit-text-stroke:1px_rgba(124,92,255,0.3)]">"</span>
-                    <span className="flex gap-1 text-[var(--bwr-gold,#fbbf24)]" aria-label="Note : 5 étoiles sur 5">
+                  <div className="relative flex h-full flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-7 backdrop-blur-md transition-shadow duration-500 hover:border-[rgba(46,134,255,0.3)] hover:shadow-[0_20px_60px_rgba(46,134,255,0.2)]">
+                    <span className="pointer-events-none absolute right-4 top-1 font-display text-6xl text-transparent [-webkit-text-stroke:1px_rgba(46,134,255,0.3)]">"</span>
+                    <span className="flex gap-1 text-[var(--bwr-gold,#FFD700)]" aria-label="Note : 5 étoiles sur 5">
                       {[...Array(5)].map((_, j) => (
                         <svg key={j} viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 drop-shadow-[0_0_6px_rgba(251,191,36,0.4)]" aria-hidden="true">
                           <path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.3 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8L12 2z" />
@@ -548,17 +548,17 @@ export default function LandingPage() {
                   className={`relative flex h-full flex-col rounded-2xl p-7 backdrop-blur-md transition-all duration-500 ${
                     p.highlight
                       ? "border border-[rgba(251,191,36,0.5)] bg-gradient-to-b from-[rgba(251,191,36,0.08)] to-white/[0.02] shadow-[0_24px_70px_rgba(251,191,36,0.15)]"
-                      : "border border-white/10 bg-white/[0.03] hover:border-[rgba(124,92,255,0.35)]"
+                      : "border border-white/10 bg-white/[0.03] hover:border-[rgba(46,134,255,0.35)]"
                   }`}
                 >
                   {p.highlight && (
-                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[var(--bwr-gold,#fbbf24)] px-3 py-1 text-[11px] font-bold text-black">
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[var(--bwr-gold,#FFD700)] px-3 py-1 text-[11px] font-bold text-black">
                       Recommandé
                     </span>
                   )}
                   <div className="flex items-center justify-between">
                     <h3 className="font-display text-lg font-semibold text-white">{p.name}</h3>
-                    {p.highlight && <Sparkles className="h-4 w-4 text-[#fbbf24]" />}
+                    {p.highlight && <Sparkles className="h-4 w-4 text-[#FFD700]" />}
                   </div>
                   <div className="mt-4 flex items-baseline gap-1">
                     <span className="font-display text-3xl font-bold text-white">{p.price}</span>
@@ -582,7 +582,7 @@ export default function LandingPage() {
                     <Button
                       className={`w-full ${
                         p.highlight
-                          ? "bg-[var(--bwr-gold,#fbbf24)] text-black hover:bg-[var(--bwr-gold,#fbbf24)]/90"
+                          ? "bg-[var(--bwr-gold,#FFD700)] text-black hover:bg-[var(--bwr-gold,#FFD700)]/90"
                           : "buttons-aurora-grad text-white"
                       }`}
                     >
@@ -621,7 +621,7 @@ export default function LandingPage() {
                 className="pointer-events-none absolute inset-0 -z-10"
                 style={{
                   background:
-                    "radial-gradient(circle, rgba(124,92,255,0.35), transparent 60%), radial-gradient(circle at 70% 50%, rgba(34,211,238,0.25), transparent 55%)",
+                    "radial-gradient(circle, rgba(46,134,255,0.35), transparent 60%), radial-gradient(circle at 70% 50%, rgba(34,211,238,0.25), transparent 55%)",
                   animation: "aurora-drift 20s ease-in-out infinite alternate",
                 }}
               />
@@ -637,7 +637,7 @@ export default function LandingPage() {
                 <a href={waDemo} target="_blank" rel="noopener noreferrer">
                   <Button
                     size="lg"
-                    className="buttons-aurora-grad w-full text-white shadow-[0_12px_40px_rgba(124,92,255,0.4)] hover:opacity-95 sm:w-auto"
+                    className="buttons-aurora-grad w-full text-white shadow-[0_12px_40px_rgba(46,134,255,0.4)] hover:opacity-95 sm:w-auto"
                   >
                     Demander une démonstration
                     <ArrowRight className="h-4 w-4" />

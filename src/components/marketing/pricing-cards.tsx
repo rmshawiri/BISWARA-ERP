@@ -17,17 +17,17 @@ export function PricingCards({ className }: { className?: string }) {
             className={`relative flex h-full flex-col rounded-2xl p-7 backdrop-blur-md transition-all duration-500 ${
               p.highlight
                 ? "border border-[rgba(251,191,36,0.5)] bg-gradient-to-b from-[rgba(251,191,36,0.08)] to-white/[0.02] shadow-[0_24px_70px_rgba(251,191,36,0.15)]"
-                : "border border-white/10 bg-white/[0.03] hover:border-[rgba(124,92,255,0.35)]"
+                : "border border-white/10 bg-white/[0.03] hover:border-[rgba(46,134,255,0.35)]"
             }`}
           >
             {p.highlight && (
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[var(--bwr-gold,#fbbf24)] px-3 py-1 text-[11px] font-bold text-black">
+              <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[var(--bwr-gold,#FFD700)] px-3 py-1 text-[11px] font-bold text-black">
                 Recommandé
               </span>
             )}
             <div className="flex items-center justify-between">
               <h3 className="font-display text-lg font-semibold text-white">{p.name}</h3>
-              {p.highlight && <Sparkles className="h-4 w-4 text-[#fbbf24]" />}
+              {p.highlight && <Sparkles className="h-4 w-4 text-[#FFD700]" />}
             </div>
             <div className="mt-4 flex items-baseline gap-1">
               <span className="font-display text-3xl font-bold text-white">{p.price}</span>
@@ -51,7 +51,7 @@ export function PricingCards({ className }: { className?: string }) {
               <Button
                 className={`w-full ${
                   p.highlight
-                    ? "bg-[var(--bwr-gold,#fbbf24)] text-black hover:bg-[var(--bwr-gold,#fbbf24)]/90"
+                    ? "bg-[var(--bwr-gold,#FFD700)] text-black hover:bg-[var(--bwr-gold,#FFD700)]/90"
                     : "buttons-aurora-grad text-white"
                 }`}
               >

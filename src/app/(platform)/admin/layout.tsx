@@ -51,8 +51,8 @@ export default async function AdminLayout({
 
   return (
     <div className="flex min-h-screen bg-[#070813]">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col overflow-hidden bg-gradient-to-b from-[#14113f] via-[#201457] to-[#05060f] text-white lg:flex">
-        <div className="pointer-events-none absolute inset-0 opacity-40 [background:radial-gradient(60%_50%_at_50%_-10%,rgba(124,92,255,0.4),transparent),radial-gradient(50%_40%_at_100%_100%,rgba(34,211,238,0.18),transparent)]" />
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col overflow-hidden bg-gradient-to-b from-[#0B1C42] via-[#0F2E5E] to-[#05060f] text-white lg:flex">
+        <div className="pointer-events-none absolute inset-0 opacity-40 [background:radial-gradient(60%_50%_at_50%_-10%,rgba(46,134,255,0.4),transparent),radial-gradient(50%_40%_at_100%_100%,rgba(34,211,238,0.18),transparent)]" />
         <div className="relative flex h-16 items-center border-b border-white/10 px-5 text-white">
           <BiswaraLogo variant="dark" />
           <span className="ml-2 rounded bg-biswara-gold-500 px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">

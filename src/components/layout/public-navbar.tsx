@@ -81,7 +81,7 @@ export function PublicNavbar() {
           >
             <Button
               size="sm"
-              className="buttons-aurora-grad text-white shadow-[0_12px_40px_rgba(124,92,255,0.35)] hover:opacity-95 hover:shadow-[0_18px_50px_rgba(124,92,255,0.45)]"
+              className="buttons-aurora-grad text-white shadow-[0_12px_40px_rgba(46,134,255,0.35)] hover:opacity-95 hover:shadow-[0_18px_50px_rgba(46,134,255,0.45)]"
             >
               Souscrire
               <ArrowUpRight className="h-3.5 w-3.5" />

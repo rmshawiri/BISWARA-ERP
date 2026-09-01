@@ -13,7 +13,7 @@ export default function PricingPage() {
     <div className="relative overflow-hidden">
       {/* Lueur d'en-tête */}
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(ellipse_70%_100%_at_50%_0%,rgba(124,92,255,0.18),transparent_70%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(ellipse_70%_100%_at_50%_0%,rgba(46,134,255,0.18),transparent_70%)]"
         aria-hidden="true"
       />
       <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
