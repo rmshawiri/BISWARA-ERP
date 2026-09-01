@@ -3,10 +3,14 @@ import { redirect } from "next/navigation";
 import { getAuthzContext } from "@/server/auth";
 import { hasPermission } from "@/server/rbac";
 import { MODULES } from "@/lib/constants";
+import { db } from "@/db";
+import { products } from "@/db/schema";
+import { eq, count } from "drizzle-orm";
 import { listProducts, listCategories, listUnits, listTaxes, listBrands } from "@/modules/catalog";
 import type { Product, ProductCategory, Unit, Tax, Brand } from "@/db/schema";
 import { NewProductButton } from "@/components/feature/catalog/new-product-button";
 import { Referentials } from "@/components/feature/catalog/referentials";
+import { Pagination } from "@/components/ui/pagination";
 import {
   Card,
   CardContent,
@@ -20,12 +24,20 @@ import { formatCurrency } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Catalogue Produits & Services" };
 
-export default async function CataloguePage() {
+export default async function CataloguePage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
   const ctx = await getAuthzContext();
   if (!ctx || ctx.superAdmin) redirect("/login");
 
+  const sp = await searchParams;
+  const page = Math.max(1, Number(sp.page) || 1);
+  const pageSize = 10;
+  const total = ctx.organization
+    ? (await db().select({ c: count() }).from(products).where(eq(products.organizationId, ctx.organization.id)))[0]?.c ?? 0
+    : 0;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
   const currency = ctx.organization?.currency ?? "KMF";
-  let products: Product[] = [];
+  let products2: Product[] = [];
   let categories: ProductCategory[] = [];
   let units: Unit[] = [];
   let taxes: Tax[] = [];
@@ -33,8 +45,8 @@ export default async function CataloguePage() {
   let dbReady = true;
 
   try {
-    const p = await listProducts(ctx);
-    if (p.ok) products = p.data;
+    const p = await listProducts(ctx, { page, pageSize });
+    if (p.ok) products2 = p.data;
     const c = await listCategories(ctx);
     if (c.ok) categories = c.data;
     const u = await listUnits(ctx);
@@ -75,7 +87,7 @@ export default async function CataloguePage() {
             <CardTitle className="text-base">Produits</CardTitle>
           </CardHeader>
           <CardContent>
-            {products.length === 0 ? (
+            {products2.length === 0 ? (
               <EmptyState
                 icon={Package}
                 title="Aucun produit"
@@ -93,7 +105,7 @@ export default async function CataloguePage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {products.map((p) => (
+                    {products2.map((p) => (
                       <tr key={p.id} className="border-b last:border-0">
                         <td className="py-3 pr-4 font-medium">{p.name}</td>
                         <td className="py-3 pr-4 text-muted-foreground">{p.reference}</td>
@@ -113,6 +125,7 @@ export default async function CataloguePage() {
                 </table>
               </div>
             )}
+            <Pagination page={page} totalPages={totalPages} total={total} />
           </CardContent>
         </Card>
 

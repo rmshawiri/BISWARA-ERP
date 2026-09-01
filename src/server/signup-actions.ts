@@ -2,6 +2,7 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ResolvedSignup } from "@/types/signup";
+import { seedDemoData } from "@/modules/demo/seed";
 
 /**
  * Crée l'organisation et le profil administrateur pour un nouvel inscrit.
@@ -94,6 +95,13 @@ export async function createOrganization(
     plan: "free",
     status: "active",
   });
+
+  // 5. Données de démonstration (best-effort, non bloquant).
+  try {
+    await seedDemoData(org.id);
+  } catch {
+    // Ne bloque pas la création.
+  }
 
   return { ok: true };
 }
