@@ -73,7 +73,7 @@ export default async function AdminMonitoringPage() {
           {services.map((s) => (
             <div key={s.name} className="flex items-center justify-between rounded-lg border p-3 text-sm">
               <div className="flex items-center gap-2">
-                {s.ok ? <CheckCircle2 className="h-4 w-4 text-emerald-500" /> : <AlertTriangle className="h-4 w-4 text-amber-500" />}
+                {s.ok ? <CheckCircle2 className="h-4 w-4 text-biswara-green-500" /> : <AlertTriangle className="h-4 w-4 text-biswara-gold-500" />}
                 <span className="font-medium">{s.name}</span>
               </div>
               <span className="text-xs text-muted-foreground">{s.detail}</span>
@@ -85,7 +85,7 @@ export default async function AdminMonitoringPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
-            {critical.length > 0 ? <AlertTriangle className="h-4 w-4 text-amber-500" /> : <ServerCrash className="h-4 w-4" />}
+            {critical.length > 0 ? <AlertTriangle className="h-4 w-4 text-biswara-gold-500" /> : <ServerCrash className="h-4 w-4" />}
             Événements sensibles récents
           </CardTitle>
         </CardHeader>

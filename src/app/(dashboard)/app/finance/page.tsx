@@ -137,7 +137,7 @@ export default async function FinancePage() {
                         </td>
                         <td
                           className={`py-3 pr-4 font-semibold tabular-nums ${
-                            t.direction === "out" ? "text-rose-400" : "text-emerald-400"
+                            t.direction === "out" ? "text-red-400" : "text-biswara-green-400"
                           }`}
                         >
                           {t.direction === "out" ? "−" : "+"}

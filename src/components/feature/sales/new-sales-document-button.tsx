@@ -311,7 +311,7 @@ export function NewSalesDocumentButton({
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Remise</span>
-              <span className="font-semibold tabular-nums text-rose-400">
+              <span className="font-semibold tabular-nums text-red-400">
                 −{num(discount).toLocaleString("fr-FR")} KMF
               </span>
             </div>

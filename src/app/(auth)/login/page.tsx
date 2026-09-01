@@ -121,7 +121,7 @@ export default function LoginPage() {
       </div>
 
       {/* Formulaire */}
-      <div className="flex items-center justify-center bg-muted/30 px-4 py-12">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-[#0A1B3E] via-[#0A1630] to-[#05060f] px-4 py-12">
         <div className="w-full max-w-sm">
           <Link
             href="/"

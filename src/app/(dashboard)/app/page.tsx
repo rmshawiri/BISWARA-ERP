@@ -119,32 +119,25 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Hero */}
-      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-[#0A3A7A] via-[#2E86FF] to-[#22d3ee] p-6 text-white shadow-card sm:p-8">
-        <div className="pointer-events-none absolute inset-0 opacity-30 [background:radial-gradient(50%_60%_at_80%_0%,rgba(255,255,255,0.35),transparent)]" />
-        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-xs font-medium backdrop-blur">
-              <Sparkles className="h-3.5 w-3.5" />
-              Bienvenue, {ctx.user.fullName.split(" ")[0]}
-            </p>
-            <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
-              {org.name}
-            </h1>
-            <p className="mt-1 text-white/80">
-              Voici un aperçu de votre activité aujourd'hui.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge className="bg-white/20 backdrop-blur" variant="outline">
-              Forfait {org.plan}
-            </Badge>
-            <Link href="/app/catalogue">
-              <Button variant="accent" size="sm" className="gap-1.5">
-                <Plus className="h-4 w-4" /> Nouveau produit
-              </Button>
-            </Link>
-          </div>
+      {/* En-tête du tableau de bord (sobre, intégré au contenu) */}
+      <div className="flex flex-col gap-4 border-b border-border/60 pb-5 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <p className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+            <Sparkles className="h-3.5 w-3.5 text-biswara-gold-500" />
+            Bienvenue, {ctx.user.fullName.split(" ")[0]}
+          </p>
+          <h1 className="mt-1.5 truncate text-2xl font-bold tracking-tight">{org.name}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Voici un aperçu de votre activité aujourd'hui.
+          </p>
+        </div>
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <Badge variant="secondary">Forfait {org.plan}</Badge>
+          <Link href="/app/catalogue">
+            <Button size="sm" className="gap-1.5">
+              <Plus className="h-4 w-4" /> Nouveau produit
+            </Button>
+          </Link>
         </div>
       </div>
 

@@ -201,7 +201,7 @@ export function NewJournalEntryButton({
             </div>
             <div className="mt-2 flex justify-between border-t pt-2">
               <span>Équilibre</span>
-              <span className={`font-bold ${totals.balanced ? "text-emerald-400" : "text-rose-400"}`}>
+              <span className={`font-bold ${totals.balanced ? "text-biswara-green-400" : "text-red-400"}`}>
                 {totals.balanced ? "✓ Équilibré" : "✗ Non équilibré"}
               </span>
             </div>

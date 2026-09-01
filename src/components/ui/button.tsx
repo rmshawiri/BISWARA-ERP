@@ -12,7 +12,7 @@ const buttonVariants = cva(
         gradient:
           "bg-brand-gradient text-white shadow-brand hover:opacity-95 hover:shadow-lg hover:shadow-[#2E86FF]/30",
         accent:
-          "bg-biswara-gold-500 text-white hover:bg-biswara-gold-600 font-semibold",
+          "bg-biswara-gold-500 text-[#003366] hover:bg-biswara-gold-400 font-semibold",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm",
         outline:

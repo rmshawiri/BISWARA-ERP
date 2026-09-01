@@ -5,11 +5,11 @@ import type { LucideIcon } from "lucide-react";
 
 const toneMap: Record<string, string> = {
   primary: "bg-primary/12 text-primary",
-  violet: "bg-biswara-violet-500/12 text-biswara-violet-600",
+  violet: "bg-biswara-gold-500/12 text-biswara-gold-600",
   cyan: "bg-biswara-cyan-500/12 text-biswara-cyan-600",
   green: "bg-biswara-green-500/12 text-biswara-green-600",
-  amber: "bg-biswara-gold-500/14 text-biswara-gold-700",
-  rose: "bg-rose-500/12 text-rose-600",
+  amber: "bg-biswara-blue-400/12 text-biswara-blue-500",
+  rose: "bg-biswara-cyan-500/12 text-biswara-cyan-600",
 };
 
 export function KpiCard({
@@ -39,7 +39,7 @@ export function KpiCard({
             <span
               className={cn(
                 "inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-medium",
-                up ? "bg-biswara-green-500/12 text-biswara-green-600" : "bg-rose-500/12 text-rose-600"
+                up ? "bg-biswara-green-500/12 text-biswara-green-600" : "bg-warning/12 text-warning"
               )}
             >
               {up ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}

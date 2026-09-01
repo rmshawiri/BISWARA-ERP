@@ -197,7 +197,7 @@ export default async function StockPage() {
                         </td>
                         <td
                           className={`py-3 pr-4 font-semibold tabular-nums ${
-                            mv.type === "out" ? "text-rose-400" : "text-emerald-400"
+                            mv.type === "out" ? "text-red-400" : "text-biswara-green-400"
                           }`}
                         >
                           {mv.type === "out" ? "−" : "+"}
