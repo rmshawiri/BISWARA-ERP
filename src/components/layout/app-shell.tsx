@@ -25,6 +25,7 @@ import {
   Users,
   Wallet,
   X,
+  LifeBuoy,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { createClient } from "@/lib/supabase/client";
@@ -82,6 +83,7 @@ const ADMIN_ITEM = { href: "/app/administration", label: "Administration", icon:
 const AUDIT_ITEM = { href: "/app/audit", label: "Journal d'audit", icon: ScrollText };
 const RAPPORTS_ITEM = { href: "/app/rapports", label: "Rapports", icon: BarChart3 };
 const PORTAIL_ITEM = { href: "/app/portail", label: "Mon espace", icon: UserRound };
+const SUPPORT_ITEM = { href: "/app/support", label: "Support", icon: LifeBuoy };
 
 export function AppShell({ user, organization, allowedModules, unreadNotifications = 0, canAdmin = false, children }: AppShellProps) {
   const pathname = usePathname();
@@ -106,6 +108,7 @@ export function AppShell({ user, organization, allowedModules, unreadNotificatio
         ]
       : []),
     { ...SETTINGS_ITEM, label: navLabel("settings") },
+    { ...SUPPORT_ITEM, label: "Support" },
   ];
 
   async function signOut() {

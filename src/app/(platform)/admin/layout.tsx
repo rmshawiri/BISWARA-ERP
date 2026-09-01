@@ -13,6 +13,7 @@ import {
   TrendingUp,
   Activity,
   ShieldCheck,
+  LifeBuoy,
 } from "lucide-react";
 import { SignOutButton } from "@/components/layout/sign-out-button";
 import { BiswaraLogo } from "@/components/brand/biswara-logo";
@@ -29,6 +30,7 @@ const adminNav = [
   { href: "/admin/utilisateurs", label: "Utilisateurs", icon: Users },
   { href: "/admin/superadmins", label: "Super Admins", icon: ShieldCheck },
   { href: "/admin/monitoring", label: "Monitoring", icon: Activity },
+  { href: "/admin/support", label: "Support", icon: LifeBuoy },
   { href: "/admin/journal", label: "Journal d'audit", icon: ScrollText },
   { href: "/admin/rapports", label: "Rapports", icon: BarChart3 },
   { href: "/admin/parametres", label: "Paramètres", icon: Settings },

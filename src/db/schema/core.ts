@@ -286,3 +286,31 @@ export const subscriptionPayments = pgTable(
 
 export type SystemSetting = typeof systemSettings.$inferSelect;
 export type SubscriptionPayment = typeof subscriptionPayments.$inferSelect;
+
+// ------------------------------------------------------------
+// TICKETS DE SUPPORT (Centre de support, par organisation)
+// ------------------------------------------------------------
+export const supportTickets = pgTable(
+  "support_tickets",
+  {
+    id: id(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").references(() => profiles.id, { onDelete: "set null" }),
+    userName: text("user_name"),
+    subject: text("subject").notNull(),
+    category: text("category").notNull().default("general"),
+    priority: text("priority").notNull().default("normal"),
+    status: text("status").notNull().default("open"),
+    message: text("message").notNull(),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [
+    index("support_tickets_org_idx").on(t.organizationId),
+    index("support_tickets_status_idx").on(t.status),
+  ]
+);
+
+export type SupportTicket = typeof supportTickets.$inferSelect;
