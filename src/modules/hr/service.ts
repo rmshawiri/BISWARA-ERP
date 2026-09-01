@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { employees, leaveRequests, contracts, attendance, payrolls } from "@/db/schema";
 import type { AuthzContext } from "@/types";
 import { hasPermission } from "@/server/rbac";
+import { assertOrgRef } from "@/server/org-ref";
 import { logAudit } from "@/engines/audit";
 import { MODULES, type PermissionAction } from "@/lib/constants";
 import { err, ok, Result } from "@/lib/result";
@@ -103,6 +104,7 @@ export async function createLeaveRequest(
   requirePerm(ctx, "create");
   const orgId = ctx.organization!.id;
   try {
+    if (!(await assertOrgRef(employees, employees.id, employees.organizationId, input.employeeId, orgId))) return err("Employé introuvable dans votre organisation.");
     const [row] = await db()
       .insert(leaveRequests)
       .values({
@@ -180,6 +182,7 @@ export async function createContract(ctx: AuthzContext, input: { employeeId: str
   requirePerm(ctx, "create");
   const orgId = ctx.organization!.id;
   try {
+    if (!(await assertOrgRef(employees, employees.id, employees.organizationId, input.employeeId, orgId))) return err("Employé introuvable dans votre organisation.");
     const [row] = await db().insert(contracts).values({ organizationId: orgId, employeeId: input.employeeId, contractType: input.contractType, startDate: input.startDate ?? null, endDate: input.endDate ?? null, baseSalary: input.baseSalary }).returning();
     if (!row) return err("Création impossible.");
     return ok(row);
@@ -203,6 +206,7 @@ export async function recordAttendance(ctx: AuthzContext, input: { employeeId: s
   requirePerm(ctx, "create");
   const orgId = ctx.organization!.id;
   try {
+    if (!(await assertOrgRef(employees, employees.id, employees.organizationId, input.employeeId, orgId))) return err("Employé introuvable dans votre organisation.");
     const [row] = await db().insert(attendance).values({ organizationId: orgId, employeeId: input.employeeId, workDate: input.workDate, status: input.status, clockIn: input.clockIn ?? null, clockOut: input.clockOut ?? null, notes: input.notes ?? null }).returning();
     if (!row) return err("Création impossible.");
     return ok(row);
@@ -227,6 +231,7 @@ export async function generatePayroll(ctx: AuthzContext, input: { employeeId: st
   requirePerm(ctx, "create");
   const orgId = ctx.organization!.id;
   try {
+    if (!(await assertOrgRef(employees, employees.id, employees.organizationId, input.employeeId, orgId))) return err("Employé introuvable dans votre organisation.");
     const gross = Number(input.baseSalary) + Number(input.bonus ?? 0);
     const net = gross - Number(input.deductions ?? 0);
     const [row] = await db().insert(payrolls).values({ organizationId: orgId, employeeId: input.employeeId, period: input.period, baseSalary: input.baseSalary, bonus: input.bonus ?? 0, deductions: input.deductions ?? 0, gross, net, status: "draft" }).returning();

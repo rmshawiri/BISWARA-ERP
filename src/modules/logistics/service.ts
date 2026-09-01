@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { vehicles, deliveries, drivers, routes, fuelLogs, maintenanceLogs, incidents } from "@/db/schema";
 import type { AuthzContext } from "@/types";
 import { hasPermission } from "@/server/rbac";
+import { assertOrgRef } from "@/server/org-ref";
 import { logAudit } from "@/engines/audit";
 import { MODULES, type PermissionAction } from "@/lib/constants";
 import { err, ok, Result } from "@/lib/result";
@@ -92,6 +93,7 @@ export async function createDelivery(
   requirePerm(ctx, "create");
   const orgId = ctx.organization!.id;
   try {
+    if (input.vehicleId && !(await assertOrgRef(vehicles, vehicles.id, vehicles.organizationId, input.vehicleId, orgId))) return err("Véhicule introuvable.");
     const [row] = await db()
       .insert(deliveries)
       .values({ ...input, organizationId: orgId })
@@ -151,6 +153,8 @@ export async function createRoute(ctx: AuthzContext, input: { name: string; vehi
   requirePerm(ctx, "create");
   const orgId = ctx.organization!.id;
   try {
+    if (input.vehicleId && !(await assertOrgRef(vehicles, vehicles.id, vehicles.organizationId, input.vehicleId, orgId))) return err("Véhicule introuvable.");
+    if (input.driverId && !(await assertOrgRef(drivers, drivers.id, drivers.organizationId, input.driverId, orgId))) return err("Chauffeur introuvable.");
     const [row] = await db().insert(routes).values({ organizationId: orgId, name: input.name, vehicleId: input.vehicleId ?? null, driverId: input.driverId ?? null, routeDate: input.routeDate ?? null, origin: input.origin ?? null, destination: input.destination ?? null, notes: input.notes ?? null }).returning();
     if (!row) return err("Création impossible.");
     return ok(row);
@@ -173,6 +177,7 @@ export async function createFuelLog(ctx: AuthzContext, input: { vehicleId?: stri
   requirePerm(ctx, "create");
   const orgId = ctx.organization!.id;
   try {
+    if (input.vehicleId && !(await assertOrgRef(vehicles, vehicles.id, vehicles.organizationId, input.vehicleId, orgId))) return err("Véhicule introuvable.");
     const [row] = await db().insert(fuelLogs).values({ organizationId: orgId, vehicleId: input.vehicleId ?? null, fuelDate: input.fuelDate ?? null, liters: input.liters, cost: input.cost, odometer: input.odometer ?? null, notes: input.notes ?? null }).returning();
     if (!row) return err("Création impossible.");
     return ok(row);
@@ -195,6 +200,7 @@ export async function createMaintenanceLog(ctx: AuthzContext, input: { vehicleId
   requirePerm(ctx, "create");
   const orgId = ctx.organization!.id;
   try {
+    if (input.vehicleId && !(await assertOrgRef(vehicles, vehicles.id, vehicles.organizationId, input.vehicleId, orgId))) return err("Véhicule introuvable.");
     const [row] = await db().insert(maintenanceLogs).values({ organizationId: orgId, vehicleId: input.vehicleId ?? null, maintenanceDate: input.maintenanceDate ?? null, type: input.type ?? null, cost: input.cost, description: input.description ?? null }).returning();
     if (!row) return err("Création impossible.");
     return ok(row);
@@ -217,6 +223,7 @@ export async function createIncident(ctx: AuthzContext, input: { vehicleId?: str
   requirePerm(ctx, "create");
   const orgId = ctx.organization!.id;
   try {
+    if (input.vehicleId && !(await assertOrgRef(vehicles, vehicles.id, vehicles.organizationId, input.vehicleId, orgId))) return err("Véhicule introuvable.");
     const [row] = await db().insert(incidents).values({ organizationId: orgId, vehicleId: input.vehicleId ?? null, incidentDate: input.incidentDate ?? null, type: input.type ?? null, description: input.description ?? null }).returning();
     if (!row) return err("Création impossible.");
     return ok(row);
