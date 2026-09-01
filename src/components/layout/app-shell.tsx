@@ -46,8 +46,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { GlobalSearch } from "@/components/layout/global-search";
 import { BiswaraLogo } from "@/components/brand/biswara-logo";
-import { LanguageSwitcher } from "@/components/feature/i18n/language-switcher";
-import { navLabel, getClientLocale } from "@/lib/i18n";
+import { navLabel } from "@/lib/i18n";
 import type { UserProfile, Organization } from "@/types";
 
 interface AppShellProps {
@@ -89,25 +88,24 @@ export function AppShell({ user, organization, allowedModules, unreadNotificatio
   const router = useRouter();
   const { resolvedTheme, setTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = React.useState(false);
-  const locale = getClientLocale();
 
   const navItems = [
-    { ...DASHBOARD_ITEM, label: navLabel("dashboard", locale) },
+    { ...DASHBOARD_ITEM, label: navLabel("dashboard") },
     ...allowedModules
       .map((m) => {
         const c = NAV_CATALOG[m];
-        return c ? { ...c, label: navLabel(m, locale) } : null;
+        return c ? { ...c, label: navLabel(m) } : null;
       })
       .filter((x): x is { href: string; label: string; icon: typeof Users } => Boolean(x)),
-    { ...RAPPORTS_ITEM, label: navLabel("rapports", locale) },
-    { ...PORTAIL_ITEM, label: navLabel("portail", locale) },
+    { ...RAPPORTS_ITEM, label: navLabel("rapports") },
+    { ...PORTAIL_ITEM, label: navLabel("portail") },
     ...(canAdmin
       ? [
-          { ...ADMIN_ITEM, label: navLabel("administration", locale) },
-          { ...AUDIT_ITEM, label: navLabel("audit", locale) },
+          { ...ADMIN_ITEM, label: navLabel("administration") },
+          { ...AUDIT_ITEM, label: navLabel("audit") },
         ]
       : []),
-    { ...SETTINGS_ITEM, label: navLabel("settings", locale) },
+    { ...SETTINGS_ITEM, label: navLabel("settings") },
   ];
 
   async function signOut() {
@@ -228,7 +226,6 @@ export function AppShell({ user, organization, allowedModules, unreadNotificatio
                 )}
               </Button>
             </Link>
-            <LanguageSwitcher />
             <Button
               variant="ghost"
               size="icon"

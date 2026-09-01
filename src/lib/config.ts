@@ -38,9 +38,9 @@ export const siteConfig = {
   // Devise par défaut
   currency: process.env.DEFAULT_CURRENCY ?? "KMF",
   country: process.env.DEFAULT_COUNTRY ?? "KM",
-  // Langues supportées (FR par défaut)
+  // Langue de la plateforme : français (monolingue)
   locale: "fr",
-  locales: ["fr", "en", "sw"] as const,
+  locales: ["fr"] as const,
 } as const;
 
 export type SiteConfig = typeof siteConfig;
