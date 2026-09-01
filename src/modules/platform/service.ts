@@ -1,6 +1,6 @@
 import "server-only";
 
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { organizations, profiles, subscriptions, auditLogs } from "@/db/schema";
 import type { AuthzContext } from "@/types";
@@ -34,6 +34,8 @@ export interface AdminSubscription {
   orgName: string | null;
   startedAt: Date;
   endedAt: Date | null;
+  trialEndsAt: Date | null;
+  discountPercent: number;
   createdAt: Date;
 }
 
@@ -97,6 +99,8 @@ export async function listSubscriptions(
         orgName: organizations.name,
         startedAt: subscriptions.startedAt,
         endedAt: subscriptions.endedAt,
+        trialEndsAt: subscriptions.trialEndsAt,
+        discountPercent: subscriptions.discountPercent,
         createdAt: subscriptions.createdAt,
       })
       .from(subscriptions)
@@ -106,6 +110,101 @@ export async function listSubscriptions(
     return ok(rows);
   } catch (e) {
     return err(e instanceof Error ? e.message : "Erreur de lecture");
+  }
+}
+
+/** Historique des événements d'abonnement (module « subscription »). */
+export async function listSubscriptionActivity(
+  ctx: AuthzContext,
+  orgId?: string
+): Promise<Result<typeof auditLogs.$inferSelect[]>> {
+  requireSuperAdmin(ctx);
+  try {
+    const base = db()
+      .select()
+      .from(auditLogs)
+      .where(eq(auditLogs.module, "subscription"))
+      .orderBy(desc(auditLogs.createdAt))
+      .limit(80);
+    const rows = orgId
+      ? await db()
+          .select()
+          .from(auditLogs)
+          .where(and(eq(auditLogs.module, "subscription"), eq(auditLogs.organizationId, orgId)))
+          .orderBy(desc(auditLogs.createdAt))
+          .limit(80)
+      : await base;
+    return ok(rows);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de lecture");
+  }
+}
+
+/** Prolonge / fixe la date de fin d'essai d'un abonnement (Super Admin). */
+export async function setSubscriptionTrial(
+  ctx: AuthzContext,
+  orgId: string,
+  days: number
+): Promise<Result<{ trialEndsAt: Date }>> {
+  requireSuperAdmin(ctx);
+  if (!Number.isFinite(days) || days < 0 || days > 3650) {
+    return err("Durée d'essai invalide (jours).");
+  }
+  try {
+    const trialEndsAt = new Date(Date.now() + days * 86_400_000);
+    const [row] = await db()
+      .update(subscriptions)
+      .set({ trialEndsAt, endedAt: null })
+      .where(eq(subscriptions.organizationId, orgId))
+      .returning({ trialEndsAt: subscriptions.trialEndsAt });
+    if (!row) return err("Abonnement introuvable pour cette organisation.");
+    await logAudit({
+      userId: ctx.user.id,
+      userName: ctx.user.fullName,
+      organizationId: orgId,
+      module: "subscription",
+      action: "subscription.set_trial",
+      entityType: "organization",
+      entityId: orgId,
+      newValue: { trialDays: days, trialEndsAt: trialEndsAt.toISOString() },
+    });
+    return ok({ trialEndsAt });
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de prolongation d'essai");
+  }
+}
+
+/** Applique une remise (0–100 %) sur l'abonnement d'une organisation (Super Admin). */
+export async function setSubscriptionDiscount(
+  ctx: AuthzContext,
+  orgId: string,
+  percent: number
+): Promise<Result<{ discountPercent: number }>> {
+  requireSuperAdmin(ctx);
+  if (!Number.isFinite(percent) || percent < 0 || percent > 100) {
+    return err("Remise invalide (0 à 100).");
+  }
+  try {
+    const value = Math.round(percent);
+    const [row] = await db()
+      .update(subscriptions)
+      .set({ discountPercent: value })
+      .where(eq(subscriptions.organizationId, orgId))
+      .returning({ discountPercent: subscriptions.discountPercent });
+    if (!row) return err("Abonnement introuvable pour cette organisation.");
+    await logAudit({
+      userId: ctx.user.id,
+      userName: ctx.user.fullName,
+      organizationId: orgId,
+      module: "subscription",
+      action: "subscription.set_discount",
+      entityType: "organization",
+      entityId: orgId,
+      newValue: { discountPercent: value },
+    });
+    return ok({ discountPercent: value });
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de remise");
   }
 }
 

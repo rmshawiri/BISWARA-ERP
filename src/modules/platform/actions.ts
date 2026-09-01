@@ -10,6 +10,8 @@ import {
   resetUserPassword,
   createOrganizationByAdmin,
   updateUserRole,
+  setSubscriptionTrial,
+  setSubscriptionDiscount,
 } from "./service";
 import type { Result } from "@/lib/result";
 
@@ -100,5 +102,27 @@ export async function updateUserRoleAction(
   if (!ctx || !ctx.superAdmin) return { ok: false, error: "Accès refusé." };
   const res = await updateUserRole(ctx, userId, { role, status });
   if (res.ok) revalidatePath("/admin/utilisateurs");
+  return res;
+}
+
+export async function setSubscriptionTrialAction(
+  orgId: string,
+  days: number
+): Promise<Result<unknown>> {
+  const ctx = await requireCtx();
+  if (!ctx || !ctx.superAdmin) return { ok: false, error: "Accès refusé." };
+  const res = await setSubscriptionTrial(ctx, orgId, days);
+  if (res.ok) revalidatePath("/admin/abonnements");
+  return res;
+}
+
+export async function setSubscriptionDiscountAction(
+  orgId: string,
+  percent: number
+): Promise<Result<unknown>> {
+  const ctx = await requireCtx();
+  if (!ctx || !ctx.superAdmin) return { ok: false, error: "Accès refusé." };
+  const res = await setSubscriptionDiscount(ctx, orgId, percent);
+  if (res.ok) revalidatePath("/admin/abonnements");
   return res;
 }

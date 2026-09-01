@@ -8,6 +8,8 @@ import {
   reactivateOrganizationAction,
   changePlanAction,
   activateSubscriptionAction,
+  setSubscriptionTrialAction,
+  setSubscriptionDiscountAction,
 } from "@/modules/platform/actions";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,9 +31,10 @@ interface OrgActionsProps {
   orgId: string;
   status: string;
   plan: string;
+  discountPercent?: number;
 }
 
-export function OrgActions({ orgId, status, plan }: OrgActionsProps) {
+export function OrgActions({ orgId, status, plan, discountPercent = 0 }: OrgActionsProps) {
   const router = useRouter();
   const [pending, startTransition] = React.useTransition();
   const suspended = status === "suspended";
@@ -107,6 +110,53 @@ export function OrgActions({ orgId, status, plan }: OrgActionsProps) {
               {p.label}
             </SelectItem>
           ))}
+        </SelectContent>
+      </Select>
+
+      <Select
+        value="__trial__"
+        onValueChange={(v) => {
+          if (v !== "__trial__") {
+            run("Essai prolongé", () =>
+              setSubscriptionTrialAction(orgId, Number(v))
+            );
+          }
+        }}
+        disabled={pending}
+      >
+        <SelectTrigger className="h-8 w-[120px] text-xs">
+          <SelectValue placeholder="Essai +j" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="__trial__">Essai +j</SelectItem>
+          <SelectItem value="7">+7 jours</SelectItem>
+          <SelectItem value="14">+14 jours</SelectItem>
+          <SelectItem value="30">+30 jours</SelectItem>
+          <SelectItem value="60">+60 jours</SelectItem>
+          <SelectItem value="90">+90 jours</SelectItem>
+        </SelectContent>
+      </Select>
+
+      <Select
+        value={`${discountPercent}`}
+        onValueChange={(v) =>
+          run("Remise appliquée", () =>
+            setSubscriptionDiscountAction(orgId, Number(v))
+          )
+        }
+        disabled={pending}
+      >
+        <SelectTrigger className="h-8 w-[110px] text-xs">
+          <SelectValue placeholder="Remise" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="0">0%</SelectItem>
+          <SelectItem value="5">5%</SelectItem>
+          <SelectItem value="10">10%</SelectItem>
+          <SelectItem value="15">15%</SelectItem>
+          <SelectItem value="20">20%</SelectItem>
+          <SelectItem value="30">30%</SelectItem>
+          <SelectItem value="50">50%</SelectItem>
         </SelectContent>
       </Select>
     </div>

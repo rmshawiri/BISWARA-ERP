@@ -12,6 +12,7 @@ import {
   timestamp,
   boolean,
   primaryKey,
+  integer,
 } from "drizzle-orm/pg-core";
 import { id, createdAt, updatedAt, status, isActive, sortOrder } from "./helpers";
 
@@ -183,6 +184,9 @@ export const subscriptions = pgTable("subscriptions", {
   endedAt: timestamp("ended_at", { withTimezone: true }),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
+  // Champs Super Admin : essai & remise
+  trialEndsAt: timestamp("trial_ends_at", { withTimezone: true }),
+  discountPercent: integer("discount_percent").notNull().default(0),
 });
 
 // ------------------------------------------------------------

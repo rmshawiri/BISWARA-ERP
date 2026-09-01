@@ -7,12 +7,27 @@ import { Badge } from "@/components/ui/badge";
 import { listUsers, type AdminUser } from "@/modules/platform";
 import { ResetPasswordButton } from "@/components/feature/platform/admin-reset-password";
 import { UserRoleSelect } from "@/components/feature/platform/user-role-select";
+import { AdminTableFilters } from "@/components/feature/platform/admin-table-filters";
+import { Pagination } from "@/components/ui/pagination";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export const metadata: Metadata = { title: "Utilisateurs — Admin" };
 
-export default async function AdminUsersPage() {
+const PAGE_SIZE = 10;
+
+export default async function AdminUsersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; status?: string; role?: string; page?: string }>;
+}) {
   const ctx = await getAuthzContext();
   if (!ctx || !ctx.superAdmin) redirect("/login");
+
+  const sp = await searchParams;
+  const q = (sp.q ?? "").trim().toLowerCase();
+  const status = sp.status ?? "";
+  const role = sp.role ?? "";
+  const page = Math.max(1, Number(sp.page) || 1);
 
   let users: AdminUser[] = [];
   try {
@@ -22,12 +37,26 @@ export default async function AdminUsersPage() {
     // garde-fou
   }
 
+  let filtered = users;
+  if (q) {
+    filtered = filtered.filter((u) =>
+      [u.fullName, u.username, u.email, u.orgName]
+        .some((x) => (x ?? "").toLowerCase().includes(q))
+    );
+  }
+  if (status) filtered = filtered.filter((u) => u.status === status);
+  if (role) filtered = filtered.filter((u) => u.role === role);
+
+  const total = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const rows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Utilisateurs Plateforme</h1>
         <p className="text-muted-foreground">
-          Comptes et rôles (Super Admin).
+          Comptes, rôles et accès (Super Admin).
         </p>
       </div>
 
@@ -35,12 +64,41 @@ export default async function AdminUsersPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Users className="h-4 w-4" />
-            Utilisateurs ({users.length})
+            Utilisateurs ({total})
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          {users.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Aucun utilisateur.</p>
+        <CardContent className="space-y-4">
+          <AdminTableFilters
+            basePath="/admin/utilisateurs"
+            q={sp.q}
+            statusValue={status}
+            statusLabel="Statut"
+            statusOptions={[
+              { value: "active", label: "Actif" },
+              { value: "suspended", label: "Suspendu" },
+              { value: "pending", label: "En attente" },
+            ]}
+            secondaryValue={role}
+            secondaryLabel="Rôle"
+            secondaryKey="role"
+            secondaryOptions={[
+              { value: "user", label: "Utilisateur" },
+              { value: "admin", label: "Admin" },
+              { value: "super_admin", label: "Super Admin" },
+            ]}
+            placeholder="Nom, identifiant, e-mail…"
+          />
+
+          {rows.length === 0 ? (
+            <EmptyState
+              icon={Users}
+              title="Aucun utilisateur"
+              description={
+                q || status || role
+                  ? "Aucun résultat pour ces filtres."
+                  : "Aucun utilisateur enregistré sur la plateforme."
+              }
+            />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -56,7 +114,7 @@ export default async function AdminUsersPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map((u) => (
+                  {rows.map((u) => (
                     <tr key={u.id} className="border-b last:border-0">
                       <td className="py-3 pr-4 font-medium">{u.fullName}</td>
                       <td className="py-3 pr-4 text-muted-foreground">{u.username}</td>
@@ -67,7 +125,7 @@ export default async function AdminUsersPage() {
                       <td className="py-3 pr-4 text-muted-foreground">{u.orgName ?? "—"}</td>
                       <td className="py-3">
                         <Badge variant={u.status === "active" ? "success" : "warning"}>
-                          {u.status === "active" ? "Actif" : "Suspendu"}
+                          {u.status === "active" ? "Actif" : u.status === "suspended" ? "Suspendu" : u.status}
                         </Badge>
                       </td>
                       <td className="py-3">
@@ -78,6 +136,10 @@ export default async function AdminUsersPage() {
                 </tbody>
               </table>
             </div>
+          )}
+
+          {total > PAGE_SIZE && (
+            <Pagination page={page} totalPages={totalPages} total={total} />
           )}
         </CardContent>
       </Card>
