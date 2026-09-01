@@ -1,12 +1,14 @@
 import "server-only";
 
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { roles, userRoles, permissionAssignments, profiles } from "@/db/schema";
 import type { AuthzContext } from "@/types";
 import { hasPermission } from "@/server/rbac";
 import { logAudit } from "@/engines/audit";
 import { MODULES, PERMISSION_ACTIONS } from "@/lib/constants";
+import { planUserLimit } from "@/lib/plans";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { err, ok, Result } from "@/lib/result";
 
 function requireAdmin(ctx: AuthzContext) {
@@ -166,6 +168,64 @@ export async function listRoleAssignments(ctx: AuthzContext) {
     return ok(rows);
   } catch (e) {
     return err(e instanceof Error ? e.message : "Erreur de lecture");
+  }
+}
+
+/** Crée un collaborateur dans l'organisation (enforce le plafond du forfait). */
+export async function createOrgCollaborator(
+  ctx: AuthzContext,
+  input: { fullName: string; username: string; email: string }
+): Promise<Result<{ temporaryPassword: string }>> {
+  try {
+    const orgId = requireAdmin(ctx);
+    const plan = ctx.organization?.plan ?? "free";
+    const limit = planUserLimit(plan);
+
+    const [cnt] = await db()
+      .select({ c: sql<number>`count(*)::int` })
+      .from(profiles)
+      .where(eq(profiles.organizationId, orgId));
+    const current = Number(cnt?.c ?? 0);
+    if (current >= limit) {
+      return err(`Limite d'utilisateurs atteinte (${limit}) pour ce forfait.`);
+    }
+
+    const temporaryPassword = `Bwr-${Math.random().toString(36).slice(2, 12)}`;
+    const admin = createAdminClient();
+    const { data: created, error: userErr } = await admin.auth.admin.createUser({
+      email: input.email,
+      password: temporaryPassword,
+      email_confirm: true,
+      user_metadata: { username: input.username, full_name: input.fullName },
+    });
+    if (userErr || !created?.user) return err("Création du compte impossible.");
+
+    const { error: profileErr } = await admin
+      .from("profiles")
+      .upsert({
+        id: created.user.id,
+        username: input.username,
+        full_name: input.fullName,
+        email: input.email,
+        role: "user",
+        organization_id: orgId,
+        status: "active",
+      });
+    if (profileErr) return err("Création du profil impossible.");
+
+    await logAudit({
+      userId: ctx.user.id,
+      userName: ctx.user.fullName,
+      organizationId: orgId,
+      module: "admin",
+      action: "user.invite",
+      entityType: "profile",
+      entityId: created.user.id,
+      newValue: { username: input.username, role: "user" },
+    });
+    return ok({ temporaryPassword });
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de création du collaborateur");
   }
 }
 

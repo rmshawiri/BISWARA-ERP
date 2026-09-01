@@ -9,7 +9,9 @@ import {
   listRoleAssignments,
 } from "@/modules/admin";
 import { MODULES } from "@/lib/constants";
+import { planUserLimit } from "@/lib/plans";
 import { RolesManager } from "@/components/feature/admin/roles-manager";
+import { InviteCollaboratorButton } from "@/components/feature/admin/invite-collaborator-button";
 
 export const metadata: Metadata = { title: "Administration — Rôles & Permissions" };
 
@@ -45,16 +47,21 @@ export default async function AdministrationPage() {
     }
   }
 
+  const limit = planUserLimit(ctx.organization.plan ?? "free");
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <ShieldCheck className="h-6 w-6 text-primary" />
-        <div>
-          <h1 className="text-2xl font-bold">Administration</h1>
-          <p className="text-muted-foreground">
-            Rôles, permissions et collaborateurs de votre organisation.
-          </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="h-6 w-6 text-primary" />
+          <div>
+            <h1 className="text-2xl font-bold">Administration</h1>
+            <p className="text-muted-foreground">
+              Rôles, permissions et collaborateurs de votre organisation.
+            </p>
+          </div>
         </div>
+        <InviteCollaboratorButton limit={limit} current={users.length} />
       </div>
       <RolesManager
         roles={roles}

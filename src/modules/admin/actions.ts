@@ -7,6 +7,7 @@ import {
   deleteRole,
   setRolePermissions,
   assignRoleToUser,
+  createOrgCollaborator,
 } from "./service";
 import type { Result } from "@/lib/result";
 
@@ -52,6 +53,22 @@ export async function assignRoleToUserAction(
   if (!ctx || ctx.superAdmin || !ctx.organization)
     return { ok: false, error: "Authentification requise." };
   const res = await assignRoleToUser(ctx, userId, roleId, assign);
+  if (res.ok) revalidatePath("/app/administration");
+  return res;
+}
+
+export async function createOrgCollaboratorAction(payload: {
+  fullName: string;
+  username: string;
+  email: string;
+}): Promise<Result<unknown>> {
+  const ctx = await getAuthzContext();
+  if (!ctx || ctx.superAdmin || !ctx.organization)
+    return { ok: false, error: "Authentification requise." };
+  if (!payload.fullName?.trim() || !payload.username?.trim() || !payload.email?.trim()) {
+    return { ok: false, error: "Nom, identifiant et e-mail requis." };
+  }
+  const res = await createOrgCollaborator(ctx, payload);
   if (res.ok) revalidatePath("/app/administration");
   return res;
 }
