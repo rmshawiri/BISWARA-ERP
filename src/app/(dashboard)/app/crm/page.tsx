@@ -6,6 +6,7 @@ import type { Customer, Opportunity } from "@/db/schema";
 import { NewCustomerButton } from "@/components/feature/crm/new-customer-button";
 import { OpportunityPipeline } from "@/components/feature/crm/opportunity-pipeline";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Users } from "lucide-react";
 
@@ -62,10 +63,11 @@ export default async function CrmPage() {
         </CardHeader>
         <CardContent>
           {customers.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 py-12 text-center text-muted-foreground">
-              <Users className="h-10 w-10 opacity-40" />
-              <p className="text-sm">Aucun contact pour le moment.</p>
-            </div>
+            <EmptyState
+              icon={Users}
+              title="Aucun contact"
+              description="Ajoutez un prospect, un client ou un partenaire pour démarrer."
+            />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">

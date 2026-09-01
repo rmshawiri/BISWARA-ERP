@@ -9,6 +9,7 @@ import { NewSalesDocumentButton, type SalesOption } from "@/components/feature/s
 import { ExportCsvButton } from "@/components/feature/sales/export-csv-button";
 import { SalesDocumentActions } from "@/components/feature/sales/sales-document-actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { FileText } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
@@ -130,13 +131,11 @@ export default async function VentesPage() {
         </CardHeader>
         <CardContent>
           {documents.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 py-12 text-center text-muted-foreground">
-              <FileText className="h-10 w-10 opacity-40" />
-              <p className="text-sm">
-                Aucun document pour le moment. Créez votre premier devis ou
-                facture.
-              </p>
-            </div>
+            <EmptyState
+              icon={FileText}
+              title="Aucun document"
+              description="Créez votre premier devis ou facture pour démarrer."
+            />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">

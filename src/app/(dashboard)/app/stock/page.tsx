@@ -12,6 +12,7 @@ import { NewStockMovementButton, type MovementOption } from "@/components/featur
 import { NewWarehouseButton } from "@/components/feature/stock/new-warehouse-button";
 import { TransferButton } from "@/components/feature/stock/transfer-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Boxes, Package, Warehouse as WarehouseIcon } from "lucide-react";
 
@@ -107,13 +108,11 @@ export default async function StockPage() {
         </CardHeader>
         <CardContent>
           {products.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 py-12 text-center text-muted-foreground">
-              <Boxes className="h-10 w-10 opacity-40" />
-              <p className="text-sm">
-                Aucun produit en stock. Ajoutez des produits depuis le
-                catalogue puis enregistrez vos mouvements.
-              </p>
-            </div>
+            <EmptyState
+              icon={Boxes}
+              title="Aucun produit en stock"
+              description="Ajoutez des produits depuis le catalogue puis enregistrez vos mouvements."
+            />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">

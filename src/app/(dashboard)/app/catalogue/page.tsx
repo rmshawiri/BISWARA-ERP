@@ -11,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Package } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
@@ -73,10 +74,11 @@ export default async function CataloguePage() {
           </CardHeader>
           <CardContent>
             {products.length === 0 ? (
-              <div className="flex flex-col items-center gap-3 py-12 text-center text-muted-foreground">
-                <Package className="h-10 w-10 opacity-40" />
-                <p className="text-sm">Aucun produit pour le moment.</p>
-              </div>
+              <EmptyState
+                icon={Package}
+                title="Aucun produit"
+                description="Ajoutez votre premier produit ou service depuis le bouton Nouveau produit."
+              />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
