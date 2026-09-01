@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Mail, Phone, MessageCircle, ArrowRight } from "lucide-react";
+import { Mail, Phone, MessageCircle, MapPin, Globe, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Reveal } from "@/components/motion/reveal";
 import { buildWhatsAppLink, demoMessage } from "@/lib/whatsapp";
@@ -14,7 +14,7 @@ const contactMethods = [
   {
     Icon: Phone,
     label: "Téléphone / WhatsApp",
-    value: siteConfig.whatsappNumber,
+    value: siteConfig.phoneDisplay,
     accent: "text-[var(--bwr-cyan,#22d3ee)]",
     bg: "border-[rgba(34,211,238,0.2)] bg-[rgba(34,211,238,0.1)]",
     href: buildWhatsAppLink(demoMessage()),
@@ -30,10 +30,26 @@ const contactMethods = [
   {
     Icon: Mail,
     label: "E-mail",
-    value: "contact@biswara.app",
+    value: siteConfig.email,
     accent: "text-[var(--bwr-violet,#7c5cff)]",
     bg: "border-[rgba(255,78,205,0.2)] bg-[rgba(255,78,205,0.1)]",
-    href: "mailto:contact@biswara.app",
+    href: `mailto:${siteConfig.email}`,
+  },
+  {
+    Icon: MapPin,
+    label: "Adresse",
+    value: siteConfig.address,
+    accent: "text-[var(--bwr-cyan,#22d3ee)]",
+    bg: "border-[rgba(34,211,238,0.2)] bg-[rgba(34,211,238,0.1)]",
+    href: `https://www.google.com/maps/search/${encodeURIComponent(siteConfig.address)}`,
+  },
+  {
+    Icon: Globe,
+    label: "Site web",
+    value: siteConfig.site,
+    accent: "text-[var(--bwr-green,#34d399)]",
+    bg: "border-[rgba(52,211,153,0.2)] bg-[rgba(52,211,153,0.1)]",
+    href: `https://${siteConfig.site}`,
   },
 ];
 

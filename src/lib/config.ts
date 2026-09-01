@@ -21,6 +21,20 @@ export const siteConfig = {
   url: resolveSiteUrl(),
   // Numéro WhatsApp officiel (utilisé par les boutons Souscrire / Démo)
   whatsappNumber: process.env.NEXT_PUBLIC_BISWARA_WHATSAPP_NUMBER ?? "+2694306306",
+  // Coordonnées officielles de MORA Shawiri
+  email: "contact@morashawiri.com",
+  phoneDisplay: "+269 430 63 06",
+  address: "Moroni Oasis, route des puffins",
+  site: "www.morashawiri.com",
+  // Réseaux sociaux MORA Shawiri
+  socials: {
+    facebook: "https://www.facebook.com/morashawiri",
+    youtube: "https://www.youtube.com/@morashawiri",
+    linkedin: "https://www.linkedin.com/in/morashawiri",
+    instagram: "https://www.instagram.com/shawiridigital/",
+    telegram: "https://t.me/@morashawiri",
+    tiktok: "https://www.tiktok.com/@morashawiri",
+  },
   // Devise par défaut
   currency: process.env.DEFAULT_CURRENCY ?? "KMF",
   country: process.env.DEFAULT_COUNTRY ?? "KM",

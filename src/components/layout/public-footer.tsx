@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Facebook, Instagram, Linkedin, Mail, Phone, MapPin } from "lucide-react";
+import { Facebook, Instagram, Linkedin, Mail, Phone, MapPin, Youtube, Send, Music } from "lucide-react";
 import { BiswaraLogo } from "@/components/brand/biswara-logo";
 import { siteConfig } from "@/lib/config";
 
@@ -23,9 +23,12 @@ const legalLinks = [
 ];
 
 const socials = [
-  { label: "LinkedIn", href: "#", Icon: Linkedin },
-  { label: "Facebook", href: "#", Icon: Facebook },
-  { label: "Instagram", href: "#", Icon: Instagram },
+  { label: "Facebook", href: siteConfig.socials.facebook, Icon: Facebook },
+  { label: "Instagram", href: siteConfig.socials.instagram, Icon: Instagram },
+  { label: "LinkedIn", href: siteConfig.socials.linkedin, Icon: Linkedin },
+  { label: "YouTube", href: siteConfig.socials.youtube, Icon: Youtube },
+  { label: "Telegram", href: siteConfig.socials.telegram, Icon: Send },
+  { label: "TikTok", href: siteConfig.socials.tiktok, Icon: Music },
 ];
 
 export function PublicFooter() {
@@ -49,6 +52,8 @@ export function PublicFooter() {
                 <a
                   key={label}
                   href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   aria-label={label}
                   className="grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-white/5 text-[var(--aurora-muted)] transition-all duration-300 hover:-translate-y-1 hover:border-transparent hover:bg-[var(--aurora-grad)] hover:text-white"
                 >
@@ -65,9 +70,9 @@ export function PublicFooter() {
 
         {/* Contact */}
         <div className="mt-12 grid gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-6 sm:grid-cols-3">
-          <ContactItem Icon={Phone} label="Téléphone / WhatsApp" value={siteConfig.whatsappNumber} />
-          <ContactItem Icon={Mail} label="E-mail" value="contact@biswara.com" />
-          <ContactItem Icon={MapPin} label="Pays" value="Comores — Union des Comores" />
+          <ContactItem Icon={Phone} label="Téléphone / WhatsApp" value={siteConfig.phoneDisplay} />
+          <ContactItem Icon={Mail} label="E-mail" value={siteConfig.email} />
+          <ContactItem Icon={MapPin} label="Adresse" value={siteConfig.address} />
         </div>
 
         <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-sm text-[var(--aurora-faint)] sm:flex-row">
