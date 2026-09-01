@@ -2,10 +2,9 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
-  ArrowRight,
+  BarChart3,
   Boxes,
   CreditCard,
-  Package,
   Plus,
   ShoppingCart,
   Sparkles,
@@ -18,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { KpiCard } from "@/components/feature/dashboard/kpi-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { formatCurrency } from "@/lib/utils";
 import { db } from "@/db";
 import { salesDocuments, products, customers, payments } from "@/db/schema";
@@ -25,13 +25,6 @@ import { eq, and } from "drizzle-orm";
 import type { LucideIcon } from "lucide-react";
 
 export const metadata: Metadata = { title: "Tableau de bord" };
-
-const recent = [
-  { icon: ShoppingCart, text: "Nouvelle commande #CMD-2026-0003", meta: "Il y a 5 min", tone: "primary" },
-  { icon: Users, text: "Client créé : SARL Horizon", meta: "Il y a 32 min", tone: "cyan" },
-  { icon: CreditCard, text: "Paiement reçu : 120 000 KMF", meta: "Il y a 1 h", tone: "green" },
-  { icon: Package, text: "Stock : 8 produits sous le seuil", meta: "Il y a 2 h", tone: "amber" },
-];
 
 type Tone = "primary" | "violet" | "cyan" | "green" | "amber" | "rose";
 type StatsItem = {
@@ -79,13 +72,50 @@ export default async function DashboardPage() {
   const currency = org.currency;
 
   let stats: StatsItem[] = [];
+  let recentActivity: { icon: LucideIcon; text: string; meta: string; tone: Tone }[] = [];
+  let chart: number[] = [];
+  let dayLabels: string[] = [];
+
   try {
     stats = await realStats(org.id, currency);
-  } catch {
-    stats = [];
-  }
 
-  const bars = [35, 55, 40, 70, 52, 85, 63];
+    // Activité récente réelle : derniers documents commerciaux.
+    const recentDocs = await db()
+      .select({ type: salesDocuments.type, number: salesDocuments.number, date: salesDocuments.date, total: salesDocuments.total })
+      .from(salesDocuments)
+      .where(eq(salesDocuments.organizationId, org.id))
+      .orderBy(salesDocuments.createdAt)
+      .limit(5);
+    const typeLabel = { quote: "Devis", order: "Commande", delivery: "Livraison", invoice: "Facture", credit_note: "Avoir" } as Record<string, string>;
+    recentActivity = recentDocs.map((d) => ({
+      icon: ShoppingCart,
+      text: `${typeLabel[d.type] ?? d.type} ${d.number}`,
+      meta: `${d.date ?? "—"} · ${formatCurrency(Number(d.total), currency)}`,
+      tone: "primary",
+    }));
+
+    // Graphique réel : total des documents par jour sur les 7 derniers jours.
+    const docs = await db()
+      .select({ date: salesDocuments.date, total: salesDocuments.total })
+      .from(salesDocuments)
+      .where(eq(salesDocuments.organizationId, org.id));
+    const buckets = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - (6 - i));
+      return { key: d.toISOString().slice(0, 10), label: d.toLocaleDateString("fr-FR", { weekday: "short" }), total: 0, max: 0 };
+    });
+    const byDay = new Map(buckets.map((b) => [b.key, b]));
+    for (const d of docs) {
+      if (d.date && byDay.has(d.date)) {
+        byDay.get(d.date)!.total += Number(d.total);
+      }
+    }
+    const max = Math.max(1, ...buckets.map((b) => b.total));
+    chart = buckets.map((b) => Math.round((b.total / max) * 100));
+    dayLabels = buckets.map((b) => b.label);
+  } catch {
+    // garde-fou : pas de données
+  }
 
   return (
     <div className="space-y-6">
@@ -131,26 +161,36 @@ export default async function DashboardPage() {
           <CardHeader className="flex-row items-center justify-between space-y-0">
             <div>
               <CardTitle className="text-base">Aperçu des ventes</CardTitle>
-              <p className="text-xs text-muted-foreground">7 derniers jours (fictif)</p>
+              <p className="text-xs text-muted-foreground">7 derniers jours (données réelles)</p>
             </div>
-            <Badge variant="secondary">
-              <TrendingUp className="mr-1 h-3 w-3" /> +12%
-            </Badge>
+            {recentActivity.length > 0 && (
+              <Badge variant="secondary">
+                {recentActivity.length} document(s) récent(s)
+              </Badge>
+            )}
           </CardHeader>
           <CardContent>
-            <div className="flex h-40 items-end gap-2">
-              {bars.map((h, i) => (
-                <div key={i} className="group relative flex-1">
-                  <div
-                    className="w-full rounded-t-lg bg-gradient-to-t from-primary/80 to-biswara-violet-500/80 transition-all group-hover:from-primary group-hover:to-biswara-violet-500"
-                    style={{ height: `${h}%` }}
-                    title={`${h}`}
-                  />
-                </div>
-              ))}
-            </div>
+            {chart.every((h) => h === 0) ? (
+              <EmptyState
+                icon={BarChart3}
+                title="Aucune vente sur les 7 derniers jours"
+                description="Créez un devis, une commande ou une facture pour voir apparaître vos ventes ici."
+              />
+            ) : (
+              <div className="flex h-40 items-end gap-2">
+                {chart.map((h, i) => (
+                  <div key={i} className="group relative flex-1">
+                    <div
+                      className="w-full rounded-t-lg bg-gradient-to-t from-primary/80 to-biswara-violet-500/80 transition-all group-hover:from-primary group-hover:to-biswara-violet-500"
+                      style={{ height: `${Math.max(4, h)}%` }}
+                      title={dayLabels[i] ?? ""}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
             <div className="mt-2 flex justify-between text-xs text-muted-foreground">
-              <span>Lun</span><span>Mar</span><span>Mer</span><span>Jeu</span><span>Ven</span><span>Sam</span><span>Dim</span>
+              {dayLabels.length ? dayLabels.map((l, i) => <span key={i}>{l}</span>) : <span>—</span>}
             </div>
           </CardContent>
         </Card>
@@ -160,20 +200,21 @@ export default async function DashboardPage() {
             <CardTitle className="text-base">Activité récente</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {recent.map((r, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <div className="rounded-lg bg-primary/10 p-2 text-primary">
-                  <r.icon className="h-4 w-4" />
+            {recentActivity.length === 0 ? (
+              <EmptyState icon={ShoppingCart} title="Aucune activité récente" />
+            ) : (
+              recentActivity.map((r, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="rounded-lg bg-primary/10 p-2 text-primary">
+                    <r.icon className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{r.text}</p>
+                    <p className="text-xs text-muted-foreground">{r.meta}</p>
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{r.text}</p>
-                  <p className="text-xs text-muted-foreground">{r.meta}</p>
-                </div>
-              </div>
-            ))}
-            <Link href="/app" className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
-              Tout voir <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
+              ))
+            )}
           </CardContent>
         </Card>
       </div>
