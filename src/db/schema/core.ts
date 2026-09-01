@@ -255,4 +255,34 @@ export const systemSettings = pgTable(
   (t) => [uniqueIndex("system_settings_key_idx").on(t.key)]
 );
 
+// ------------------------------------------------------------
+// PAIEMENTS D'ABONNEMENTS (plateforme, Super Admin)
+// ------------------------------------------------------------
+export const subscriptionPayments = pgTable(
+  "subscription_payments",
+  {
+    id: id(),
+    subscriptionId: uuid("subscription_id").references(() => subscriptions.id, {
+      onDelete: "cascade",
+    }),
+    organizationId: uuid("organization_id").references(() => organizations.id, {
+      onDelete: "cascade",
+    }),
+    amount: integer("amount").notNull().default(0),
+    currency: text("currency").notNull().default("KMF"),
+    method: text("method").notNull().default("cash"),
+    status: text("status").notNull().default("pending"),
+    reference: text("reference"),
+    paidAt: timestamp("paid_at", { withTimezone: true }),
+    note: text("note"),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [
+    index("subscription_payments_org_idx").on(t.organizationId),
+    index("subscription_payments_status_idx").on(t.status),
+  ]
+);
+
 export type SystemSetting = typeof systemSettings.$inferSelect;
+export type SubscriptionPayment = typeof subscriptionPayments.$inferSelect;

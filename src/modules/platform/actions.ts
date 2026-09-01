@@ -12,6 +12,8 @@ import {
   updateUserRole,
   setSubscriptionTrial,
   setSubscriptionDiscount,
+  recordSubscriptionPayment,
+  updateSubscriptionPaymentStatus,
 } from "./service";
 import type { Result } from "@/lib/result";
 
@@ -124,5 +126,30 @@ export async function setSubscriptionDiscountAction(
   if (!ctx || !ctx.superAdmin) return { ok: false, error: "Accès refusé." };
   const res = await setSubscriptionDiscount(ctx, orgId, percent);
   if (res.ok) revalidatePath("/admin/abonnements");
+  return res;
+}
+
+export async function recordSubscriptionPaymentAction(
+  orgId: string,
+  payload: { amount: number; method: string; reference?: string; note?: string }
+): Promise<Result<unknown>> {
+  const ctx = await requireCtx();
+  if (!ctx || !ctx.superAdmin) return { ok: false, error: "Accès refusé." };
+  const res = await recordSubscriptionPayment(ctx, orgId, payload);
+  if (res.ok) revalidatePath("/admin/paiements");
+  return res;
+}
+
+export async function updateSubscriptionPaymentStatusAction(
+  paymentId: string,
+  status: string
+): Promise<Result<unknown>> {
+  const ctx = await requireCtx();
+  if (!ctx || !ctx.superAdmin) return { ok: false, error: "Accès refusé." };
+  const res = await updateSubscriptionPaymentStatus(ctx, paymentId, status);
+  if (res.ok) {
+    revalidatePath("/admin/paiements");
+    revalidatePath("/admin/revenus");
+  }
   return res;
 }

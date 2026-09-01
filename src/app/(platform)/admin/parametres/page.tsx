@@ -3,6 +3,7 @@ import { getAuthzContext } from "@/server/auth";
 import { redirect } from "next/navigation";
 import { listSystemSettings } from "@/modules/platform/system-settings";
 import { SystemSettingsForm } from "@/components/feature/platform/system-settings-form";
+import { MaintenanceToggle } from "@/components/feature/platform/maintenance-toggle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Activity, ShieldCheck } from "lucide-react";
@@ -72,6 +73,8 @@ export default async function AdminSettingsPage() {
           </CardContent>
         </Card>
       </div>
+
+      <MaintenanceToggle enabled={initial.maintenance_enabled === "true"} />
     </div>
   );
 }

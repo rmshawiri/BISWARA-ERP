@@ -9,6 +9,9 @@ import {
   Users,
   ScrollText,
   BarChart3,
+  Wallet,
+  TrendingUp,
+  Activity,
 } from "lucide-react";
 import { SignOutButton } from "@/components/layout/sign-out-button";
 import { BiswaraLogo } from "@/components/brand/biswara-logo";
@@ -20,7 +23,10 @@ const adminNav = [
   { href: "/admin", label: "Tableau de bord", icon: LayoutDashboard },
   { href: "/admin/organisations", label: "Organisations", icon: Building2 },
   { href: "/admin/abonnements", label: "Abonnements", icon: CreditCard },
+  { href: "/admin/paiements", label: "Paiements", icon: Wallet },
+  { href: "/admin/revenus", label: "Revenus", icon: TrendingUp },
   { href: "/admin/utilisateurs", label: "Utilisateurs", icon: Users },
+  { href: "/admin/monitoring", label: "Monitoring", icon: Activity },
   { href: "/admin/journal", label: "Journal d'audit", icon: ScrollText },
   { href: "/admin/rapports", label: "Rapports", icon: BarChart3 },
   { href: "/admin/parametres", label: "Paramètres", icon: Settings },

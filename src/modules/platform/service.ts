@@ -2,7 +2,7 @@ import "server-only";
 
 import { eq, and, desc, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { organizations, profiles, subscriptions, auditLogs } from "@/db/schema";
+import { organizations, profiles, subscriptions, auditLogs, subscriptionPayments } from "@/db/schema";
 import type { AuthzContext } from "@/types";
 import { err, ok, Result } from "@/lib/result";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -24,6 +24,235 @@ export interface AdminUser {
   organizationId: string | null;
   orgName: string | null;
   createdAt: Date;
+}
+
+export interface AdminSubscriptionPayment {
+  id: string;
+  organizationId: string | null;
+  orgName: string | null;
+  plan: string | null;
+  amount: number;
+  currency: string;
+  method: string;
+  status: string;
+  reference: string | null;
+  note: string | null;
+  paidAt: Date | null;
+  createdAt: Date;
+}
+
+/** Liste les paiements d'abonnements (Super Admin). */
+export async function listSubscriptionPayments(
+  ctx: AuthzContext,
+  opts: { status?: string } = {}
+): Promise<Result<AdminSubscriptionPayment[]>> {
+  requireSuperAdmin(ctx);
+  try {
+    const base = db()
+      .select({
+        id: subscriptionPayments.id,
+        organizationId: subscriptionPayments.organizationId,
+        orgName: organizations.name,
+        plan: subscriptions.plan,
+        amount: subscriptionPayments.amount,
+        currency: subscriptionPayments.currency,
+        method: subscriptionPayments.method,
+        status: subscriptionPayments.status,
+        reference: subscriptionPayments.reference,
+        note: subscriptionPayments.note,
+        paidAt: subscriptionPayments.paidAt,
+        createdAt: subscriptionPayments.createdAt,
+      })
+      .from(subscriptionPayments)
+      .leftJoin(subscriptions, eq(subscriptionPayments.subscriptionId, subscriptions.id))
+      .leftJoin(organizations, eq(subscriptionPayments.organizationId, organizations.id))
+      .orderBy(desc(subscriptionPayments.createdAt))
+      .limit(200);
+    const rows = opts.status
+      ? await db()
+          .select({
+            id: subscriptionPayments.id,
+            organizationId: subscriptionPayments.organizationId,
+            orgName: organizations.name,
+            plan: subscriptions.plan,
+            amount: subscriptionPayments.amount,
+            currency: subscriptionPayments.currency,
+            method: subscriptionPayments.method,
+            status: subscriptionPayments.status,
+            reference: subscriptionPayments.reference,
+            note: subscriptionPayments.note,
+            paidAt: subscriptionPayments.paidAt,
+            createdAt: subscriptionPayments.createdAt,
+          })
+          .from(subscriptionPayments)
+          .leftJoin(subscriptions, eq(subscriptionPayments.subscriptionId, subscriptions.id))
+          .leftJoin(organizations, eq(subscriptionPayments.organizationId, organizations.id))
+          .where(eq(subscriptionPayments.status, opts.status))
+          .orderBy(desc(subscriptionPayments.createdAt))
+          .limit(200)
+      : await base;
+    return ok(rows.map((r) => ({ ...r, amount: Number(r.amount) })));
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de lecture");
+  }
+}
+
+/** Enregistre un paiement d'abonnement (Super Admin). */
+export async function recordSubscriptionPayment(
+  ctx: AuthzContext,
+  orgId: string,
+  input: { amount: number; method: string; reference?: string; note?: string }
+): Promise<Result<{ id: string }>> {
+  requireSuperAdmin(ctx);
+  const amount = Math.round(input.amount);
+  if (!Number.isFinite(amount) || amount <= 0) return err("Montant invalide.");
+  try {
+    const [sub] = await db()
+      .select({ id: subscriptions.id })
+      .from(subscriptions)
+      .where(eq(subscriptions.organizationId, orgId))
+      .limit(1);
+    if (!sub) return err("Aucun abonnement pour cette organisation.");
+    const [row] = await db()
+      .insert(subscriptionPayments)
+      .values({
+        subscriptionId: sub.id,
+        organizationId: orgId,
+        amount,
+        method: input.method || "cash",
+        reference: input.reference ?? null,
+        note: input.note ?? null,
+        status: "pending",
+      })
+      .returning({ id: subscriptionPayments.id });
+    if (!row) return err("Enregistrement impossible.");
+    await logAudit({
+      userId: ctx.user.id,
+      userName: ctx.user.fullName,
+      organizationId: orgId,
+      module: "subscription",
+      action: "subscription.payment.record",
+      entityType: "subscription_payment",
+      entityId: row.id,
+      newValue: { amount, method: input.method },
+    });
+    return ok({ id: row.id });
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur d'enregistrement");
+  }
+}
+
+/** Valide / refuse / annule un paiement d'abonnement (Super Admin). */
+export async function updateSubscriptionPaymentStatus(
+  ctx: AuthzContext,
+  paymentId: string,
+  status: string
+): Promise<Result<{ id: string }>> {
+  requireSuperAdmin(ctx);
+  if (!["pending", "validated", "refused", "canceled"].includes(status)) {
+    return err("Statut de paiement invalide.");
+  }
+  try {
+    const set: Record<string, unknown> = { status };
+    if (status === "validated") set.paidAt = new Date();
+    const [row] = await db()
+      .update(subscriptionPayments)
+      .set(set)
+      .where(eq(subscriptionPayments.id, paymentId))
+      .returning({ id: subscriptionPayments.id, organizationId: subscriptionPayments.organizationId });
+    if (!row) return err("Paiement introuvable.");
+    // Si validé : on active l'abonnement de l'organisation.
+    if (status === "validated" && row.organizationId) {
+      await db()
+        .update(subscriptions)
+        .set({ status: "active", endedAt: null })
+        .where(eq(subscriptions.organizationId, row.organizationId));
+    }
+    await logAudit({
+      userId: ctx.user.id,
+      userName: ctx.user.fullName,
+      organizationId: row.organizationId,
+      module: "subscription",
+      action: "subscription.payment.status",
+      entityType: "subscription_payment",
+      entityId: paymentId,
+      newValue: { status },
+    });
+    return ok({ id: row.id });
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de mise à jour");
+  }
+}
+
+/** Statistiques de revenus (paiements validés) — Super Admin. */
+export async function platformRevenue(
+  ctx: AuthzContext
+): Promise<
+  Result<{
+    total: number;
+    month: number;
+    year: number;
+    byPlan: Record<string, number>;
+    last6Months: { label: string; amount: number }[];
+  }>
+> {
+  requireSuperAdmin(ctx);
+  try {
+    const now = new Date();
+    const yearStart = new Date(now.getFullYear(), 0, 1);
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const [totalRow, monthRow, yearRow, byPlanRows, monthRows] = await Promise.all([
+      db().select({ s: sql<number>`coalesce(sum(${subscriptionPayments.amount}),0)::int` }).from(subscriptionPayments).where(eq(subscriptionPayments.status, "validated")),
+      db()
+        .select({ s: sql<number>`coalesce(sum(${subscriptionPayments.amount}),0)::int` })
+        .from(subscriptionPayments)
+        .where(and(eq(subscriptionPayments.status, "validated"), sql`${subscriptionPayments.paidAt} >= ${monthStart}`)),
+      db()
+        .select({ s: sql<number>`coalesce(sum(${subscriptionPayments.amount}),0)::int` })
+        .from(subscriptionPayments)
+        .where(and(eq(subscriptionPayments.status, "validated"), sql`${subscriptionPayments.paidAt} >= ${yearStart}`)),
+      db()
+        .select({ plan: subscriptions.plan, s: sql<number>`coalesce(sum(${subscriptionPayments.amount}),0)::int` })
+        .from(subscriptionPayments)
+        .leftJoin(subscriptions, eq(subscriptionPayments.subscriptionId, subscriptions.id))
+        .where(eq(subscriptionPayments.status, "validated"))
+        .groupBy(subscriptions.plan),
+      db()
+        .select({ paidAt: subscriptionPayments.paidAt, s: sql<number>`coalesce(sum(${subscriptionPayments.amount}),0)::int` })
+        .from(subscriptionPayments)
+        .where(eq(subscriptionPayments.status, "validated"))
+        .groupBy(subscriptionPayments.paidAt),
+    ]);
+
+    const byPlan: Record<string, number> = {};
+    for (const r of byPlanRows) byPlan[r.plan ?? "free"] = Number(r.s);
+
+    // Agrégation par mois (6 derniers mois).
+    const buckets = new Map<string, number>();
+    for (const r of monthRows) {
+      if (!r.paidAt) continue;
+      const d = new Date(r.paidAt);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      buckets.set(key, (buckets.get(key) ?? 0) + Number(r.s));
+    }
+    const last6Months: { label: string; amount: number }[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      last6Months.push({ label: d.toLocaleDateString("fr-FR", { month: "short", year: "2-digit" }), amount: buckets.get(key) ?? 0 });
+    }
+
+    return ok({
+      total: Number(totalRow[0]?.s ?? 0),
+      month: Number(monthRow[0]?.s ?? 0),
+      year: Number(yearRow[0]?.s ?? 0),
+      byPlan,
+      last6Months,
+    });
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de calcul des revenus");
+  }
 }
 
 export interface AdminSubscription {
