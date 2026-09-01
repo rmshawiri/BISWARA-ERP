@@ -3,7 +3,7 @@
 import * as React from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { updateTicketStatusAction } from "@/modules/support";
+import { updateTicketStatusAction } from "@/modules/support/actions";
 import {
   Select,
   SelectContent,

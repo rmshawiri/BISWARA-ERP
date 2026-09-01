@@ -51,3 +51,5 @@ Thumbs.db
 # --- Divers ---
 *.pem
 *.key
+
+.vercel
