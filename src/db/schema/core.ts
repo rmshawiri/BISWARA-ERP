@@ -239,3 +239,16 @@ export type Profile = typeof profiles.$inferSelect;
 export type Role = typeof roles.$inferSelect;
 export type AuditLog = typeof auditLogs.$inferSelect;
 export type Notification = typeof notifications.$inferSelect;
+
+export const systemSettings = pgTable(
+  "system_settings",
+  {
+    id: id(),
+    key: text("key").notNull().unique(),
+    value: text("value"),
+    updatedAt: updatedAt(),
+  },
+  (t) => [uniqueIndex("system_settings_key_idx").on(t.key)]
+);
+
+export type SystemSetting = typeof systemSettings.$inferSelect;

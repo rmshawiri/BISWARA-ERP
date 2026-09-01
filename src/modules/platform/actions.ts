@@ -9,6 +9,7 @@ import {
   activateSubscription,
   resetUserPassword,
   createOrganizationByAdmin,
+  updateUserRole,
 } from "./service";
 import type { Result } from "@/lib/result";
 
@@ -87,5 +88,17 @@ export async function createOrganizationAction(payload: {
   }
   const res = await createOrganizationByAdmin(ctx, payload);
   if (res.ok) revalidatePath("/admin/organisations");
+  return res;
+}
+
+export async function updateUserRoleAction(
+  userId: string,
+  role?: string,
+  status?: string
+): Promise<Result<unknown>> {
+  const ctx = await requireCtx();
+  if (!ctx || !ctx.superAdmin) return { ok: false, error: "Accès refusé." };
+  const res = await updateUserRole(ctx, userId, { role, status });
+  if (res.ok) revalidatePath("/admin/utilisateurs");
   return res;
 }

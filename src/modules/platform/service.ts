@@ -357,3 +357,31 @@ export async function createOrganizationByAdmin(
     return err(e instanceof Error ? e.message : "Erreur de création");
   }
 }
+
+/** Change le rôle / statut d'un utilisateur (Super Admin). */
+export async function updateUserRole(
+  ctx: AuthzContext,
+  userId: string,
+  input: { role?: string; status?: string }
+): Promise<Result<typeof profiles.$inferSelect>> {
+  requireSuperAdmin(ctx);
+  try {
+    const set: Record<string, unknown> = {};
+    if (input.role) set.role = input.role;
+    if (input.status) set.status = input.status;
+    const [row] = await db().update(profiles).set(set).where(eq(profiles.id, userId)).returning();
+    if (!row) return err("Utilisateur introuvable.");
+    await logAudit({
+      userId: ctx.user.id,
+      userName: ctx.user.fullName,
+      module: "admin",
+      action: "user.update_role",
+      entityType: "profile",
+      entityId: userId,
+      newValue: set,
+    });
+    return ok(row);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de mise à jour");
+  }
+}

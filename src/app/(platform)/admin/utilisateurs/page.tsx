@@ -6,15 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { listUsers, type AdminUser } from "@/modules/platform";
 import { ResetPasswordButton } from "@/components/feature/platform/admin-reset-password";
+import { UserRoleSelect } from "@/components/feature/platform/user-role-select";
 
 export const metadata: Metadata = { title: "Utilisateurs — Admin" };
-
-const ROLE_LABELS: Record<string, string> = {
-  super_admin: "Super Admin",
-  admin: "Admin",
-  manager: "Manager",
-  user: "Utilisateur",
-};
 
 export default async function AdminUsersPage() {
   const ctx = await getAuthzContext();
@@ -68,9 +62,7 @@ export default async function AdminUsersPage() {
                       <td className="py-3 pr-4 text-muted-foreground">{u.username}</td>
                       <td className="py-3 pr-4 text-muted-foreground">{u.email ?? "—"}</td>
                       <td className="py-3 pr-4">
-                        <Badge variant={u.role === "super_admin" ? "gold" : "secondary"}>
-                          {ROLE_LABELS[u.role] ?? u.role}
-                        </Badge>
+                        <UserRoleSelect userId={u.id} role={u.role} />
                       </td>
                       <td className="py-3 pr-4 text-muted-foreground">{u.orgName ?? "—"}</td>
                       <td className="py-3">

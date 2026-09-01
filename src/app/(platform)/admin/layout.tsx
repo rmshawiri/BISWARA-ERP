@@ -8,6 +8,7 @@ import {
   Settings,
   Users,
   ScrollText,
+  BarChart3,
 } from "lucide-react";
 import { SignOutButton } from "@/components/layout/sign-out-button";
 import { BiswaraLogo } from "@/components/brand/biswara-logo";
@@ -21,6 +22,7 @@ const adminNav = [
   { href: "/admin/abonnements", label: "Abonnements", icon: CreditCard },
   { href: "/admin/utilisateurs", label: "Utilisateurs", icon: Users },
   { href: "/admin/journal", label: "Journal d'audit", icon: ScrollText },
+  { href: "/admin/rapports", label: "Rapports", icon: BarChart3 },
   { href: "/admin/parametres", label: "Paramètres", icon: Settings },
 ];
 
