@@ -7,6 +7,7 @@ import { NewAccountButton } from "@/components/feature/finance/new-account-butto
 import { NewTransactionButton } from "@/components/feature/finance/new-transaction-button";
 import { FinanceExtras } from "@/components/feature/finance/finance-extras";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Wallet, ArrowDownUp } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
@@ -159,7 +160,11 @@ export default async function FinancePage() {
           </CardHeader>
           <CardContent>
             {accounts.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Aucun compte configuré.</p>
+              <EmptyState
+                icon={Wallet}
+                title="Aucun compte configuré"
+                description="Ajoutez une caisse, un compte bancaire ou mobile money."
+              />
             ) : (
               <ul className="space-y-2">
                 {accounts.map((a) => (

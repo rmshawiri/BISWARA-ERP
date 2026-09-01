@@ -7,6 +7,7 @@ import { NewSupplierButton } from "@/components/feature/purchasing/new-supplier-
 import { NewPurchaseDocumentButton } from "@/components/feature/purchasing/new-purchase-document-button";
 import { PurchaseActions } from "@/components/feature/purchasing/purchase-actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingBag, Truck } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
@@ -92,7 +93,11 @@ export default async function AchatsPage() {
           </CardHeader>
           <CardContent>
             {documents.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Aucun document d'achat.</p>
+              <EmptyState
+                icon={ShoppingBag}
+                title="Aucun document d'achat"
+                description="Créez une demande d'achat ou un bon de commande."
+              />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
