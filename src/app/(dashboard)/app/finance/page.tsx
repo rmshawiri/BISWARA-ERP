@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getAuthzContext } from "@/server/auth";
+import { requireModuleAccess } from "@/server/module-gate";
+import { MODULES } from "@/lib/constants";
 import { listAccounts, listTransactions, listCashSessions, listBudgets } from "@/modules/finance";
 import type { Account, FinancialTransaction, CashSession, Budget } from "@/db/schema";
 import { NewAccountButton } from "@/components/feature/finance/new-account-button";
@@ -38,6 +40,7 @@ const METHOD_LABELS: Record<string, string> = {
 export default async function FinancePage() {
   const ctx = await getAuthzContext();
   if (!ctx || ctx.superAdmin) redirect("/login");
+  await requireModuleAccess(ctx, MODULES.FINANCE);
 
   let accounts: Account[] = [];
   let transactions: FinancialTransaction[] = [];

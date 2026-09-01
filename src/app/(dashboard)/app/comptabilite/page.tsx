@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getAuthzContext } from "@/server/auth";
+import { requireModuleAccess } from "@/server/module-gate";
+import { MODULES } from "@/lib/constants";
 import {
   listAccounts,
   listJournals,
@@ -32,6 +34,7 @@ const ACCOUNT_TYPE_LABELS: Record<string, string> = {
 export default async function ComptabilitePage() {
   const ctx = await getAuthzContext();
   if (!ctx || ctx.superAdmin) redirect("/login");
+  await requireModuleAccess(ctx, MODULES.ACCOUNTING);
 
   let accounts: ChartOfAccount[] = [];
   let journals: Journal[] = [];

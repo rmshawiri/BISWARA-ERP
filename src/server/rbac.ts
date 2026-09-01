@@ -2,6 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PermissionAction } from "@/lib/constants";
 import { MODULES } from "@/lib/constants";
+import { planAllowsModule } from "@/lib/plans";
 import type { AuthzContext, UserProfile } from "@/types";
 import type { PermissionKey } from "@/types";
 
@@ -96,6 +97,11 @@ export function hasPermission(
 ): boolean {
   if (!ctx) return false;
   if (ctx.superAdmin) return true;
+  // Gating par forfait : un module non inclus dans le forfait n'est jamais accessible
+  // (enforcement côté service ET côté navigation).
+  if (ctx.organization && !planAllowsModule(ctx.organization.plan ?? "free", module)) {
+    return false;
+  }
   return ctx.permissions.get(module)?.has(action) ?? false;
 }
 
