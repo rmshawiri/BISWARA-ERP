@@ -2,7 +2,7 @@ import "server-only";
 
 import { eq, and, like, sql, inArray } from "drizzle-orm";
 import { db } from "@/db";
-import { salesDocuments, salesDocumentLines, payments, stockMovements, financialTransactions, accounts, products, warehouses } from "@/db/schema";
+import { salesDocuments, salesDocumentLines, payments, stockMovements, financialTransactions, accounts, products, warehouses, customers } from "@/db/schema";
 import type { AuthzContext } from "@/types";
 import { hasPermission } from "@/server/rbac";
 import { logAudit } from "@/engines/audit";
@@ -65,6 +65,27 @@ export async function createSalesDocument(
     const seq = await nextSequence(orgId, prefix, year);
     const number = buildDocumentNumber({ prefix, year, seq });
     const totals = computeTotals(input.lines, input.discount);
+
+    // Sécurité multi-tenant : les produits et le client référencés doivent appartenir
+    // à l'organisation (validation des FKs parent pour éviter toute référence cross-tenant).
+    const referencedProductIds = input.lines.map((l) => l.productId).filter((p): p is string => !!p);
+    if (referencedProductIds.length > 0) {
+      const owned = await db()
+        .select({ id: products.id })
+        .from(products)
+        .where(and(eq(products.organizationId, orgId), inArray(products.id, referencedProductIds)));
+      const ownedSet = new Set(owned.map((p) => p.id));
+      const missing = referencedProductIds.filter((id) => !ownedSet.has(id));
+      if (missing.length > 0) return err("Un ou plusieurs produits n'appartiennent pas à votre organisation.");
+    }
+    if (input.customerId) {
+      const [cust] = await db()
+        .select({ id: customers.id })
+        .from(customers)
+        .where(and(eq(customers.id, input.customerId), eq(customers.organizationId, orgId)))
+        .limit(1);
+      if (!cust) return err("Client introuvable dans votre organisation.");
+    }
 
     const [document] = await db()
       .insert(salesDocuments)
@@ -222,7 +243,7 @@ export async function updateDocumentStatus(
           const dbProducts = await db()
             .select({ id: products.id, isService: products.isService })
             .from(products)
-            .where(inArray(products.id, productIds));
+            .where(and(eq(products.organizationId, orgId), inArray(products.id, productIds)));
           for (const p of dbProducts) isServiceMap[p.id] = p.isService;
         }
 

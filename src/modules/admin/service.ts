@@ -73,6 +73,13 @@ export async function deleteRole(ctx: AuthzContext, roleId: string) {
 export async function getRolePermissions(ctx: AuthzContext, roleId: string) {
   try {
     const orgId = requireAdmin(ctx);
+    // Le rôle doit appartenir à l'organisation (sinon lecture cross-tenant).
+    const [role] = await db()
+      .select({ id: roles.id })
+      .from(roles)
+      .where(and(eq(roles.id, roleId), eq(roles.organizationId, orgId)))
+      .limit(1);
+    if (!role) return err("Rôle introuvable.");
     const rows = await db()
       .select({ module: permissionAssignments.module, action: permissionAssignments.action })
       .from(permissionAssignments)
@@ -140,6 +147,20 @@ export async function listOrgUsers(ctx: AuthzContext) {
 export async function assignRoleToUser(ctx: AuthzContext, userId: string, roleId: string, assign: boolean) {
   try {
     const orgId = requireAdmin(ctx);
+    // Valider que le rôle ET l'utilisateur appartiennent à l'organisation
+    // (sinon écriture cross-tenant sur user_roles).
+    const [role] = await db()
+      .select({ id: roles.id })
+      .from(roles)
+      .where(and(eq(roles.id, roleId), eq(roles.organizationId, orgId)))
+      .limit(1);
+    if (!role) return err("Rôle introuvable.");
+    const [user] = await db()
+      .select({ id: profiles.id })
+      .from(profiles)
+      .where(and(eq(profiles.id, userId), eq(profiles.organizationId, orgId)))
+      .limit(1);
+    if (!user) return err("Utilisateur introuvable dans cette organisation.");
     if (assign) {
       await db()
         .insert(userRoles)

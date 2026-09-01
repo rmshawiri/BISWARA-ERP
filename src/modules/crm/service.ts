@@ -159,6 +159,13 @@ export async function createOpportunity(
   requirePerm(ctx, "create");
   const orgId = ctx.organization!.id;
   try {
+    // Sécurité multi-tenant : le client référencé doit appartenir à l'organisation.
+    const [cust] = await db()
+      .select({ id: customers.id })
+      .from(customers)
+      .where(and(eq(customers.id, input.customerId), eq(customers.organizationId, orgId)))
+      .limit(1);
+    if (!cust) return err("Client introuvable dans votre organisation.");
     const [row] = await db()
       .insert(opportunities)
       .values({

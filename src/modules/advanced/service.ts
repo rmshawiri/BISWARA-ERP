@@ -23,7 +23,7 @@ function requireAdmin(ctx: AuthzContext) {
 /* ---- Devises ---- */
 export async function listCurrencies(ctx: AuthzContext) {
   try {
-    const rows = await db().select().from(currencies).where(eq(currencies.organizationId, requireOrg(ctx)));
+    const rows = await db().select().from(currencies).where(eq(currencies.organizationId, requireAdmin(ctx)));
     return ok(rows);
   } catch (e) {
     return err(e instanceof Error ? e.message : "Erreur de lecture");
@@ -53,7 +53,7 @@ export async function setDefaultCurrency(ctx: AuthzContext, id: string) {
 /* ---- Modes de paiement ---- */
 export async function listPaymentMethods(ctx: AuthzContext) {
   try {
-    const rows = await db().select().from(paymentMethods).where(eq(paymentMethods.organizationId, requireOrg(ctx)));
+    const rows = await db().select().from(paymentMethods).where(eq(paymentMethods.organizationId, requireAdmin(ctx)));
     return ok(rows);
   } catch (e) {
     return err(e instanceof Error ? e.message : "Erreur de lecture");
@@ -81,7 +81,7 @@ export async function togglePaymentMethod(ctx: AuthzContext, id: string, active:
 /* ---- Clés API ---- */
 export async function listApiKeys(ctx: AuthzContext) {
   try {
-    const rows = await db().select().from(apiKeys).where(eq(apiKeys.organizationId, requireOrg(ctx)));
+    const rows = await db().select().from(apiKeys).where(eq(apiKeys.organizationId, requireAdmin(ctx)));
     return ok(rows);
   } catch (e) {
     return err(e instanceof Error ? e.message : "Erreur de lecture");
@@ -111,7 +111,7 @@ export async function revokeApiKey(ctx: AuthzContext, id: string) {
 /* ---- Webhooks ---- */
 export async function listWebhooks(ctx: AuthzContext) {
   try {
-    const rows = await db().select().from(webhooks).where(eq(webhooks.organizationId, requireOrg(ctx)));
+    const rows = await db().select().from(webhooks).where(eq(webhooks.organizationId, requireAdmin(ctx)));
     return ok(rows);
   } catch (e) {
     return err(e instanceof Error ? e.message : "Erreur de lecture");

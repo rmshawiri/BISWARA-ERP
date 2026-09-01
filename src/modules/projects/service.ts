@@ -90,6 +90,13 @@ export async function createTask(
   requirePerm(ctx, "create");
   const orgId = ctx.organization!.id;
   try {
+    // Sécurité multi-tenant : le projet parent doit appartenir à l'organisation.
+    const [proj] = await db()
+      .select({ id: projects.id })
+      .from(projects)
+      .where(and(eq(projects.id, projectId), eq(projects.organizationId, orgId)))
+      .limit(1);
+    if (!proj) return err("Projet introuvable dans votre organisation.");
     const [row] = await db()
       .insert(projectTasks)
       .values({
