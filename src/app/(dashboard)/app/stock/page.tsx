@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getAuthzContext } from "@/server/auth";
+import { hasPermission } from "@/server/rbac";
+import { MODULES } from "@/lib/constants";
 import { listProducts } from "@/modules/catalog";
 import {
   listWarehouses,
@@ -78,14 +80,16 @@ export default async function StockPage() {
             Suivez vos niveaux de stock, mouvements et dépôts.
           </p>
         </div>
-        <div className="flex gap-2">
-          <NewStockMovementButton
-            products={movementOptions}
-            warehouses={warehouseOptions}
-          />
-          <NewWarehouseButton />
-          <TransferButton products={movementOptions} warehouses={warehouseOptions} />
-        </div>
+        {hasPermission(ctx, MODULES.STOCK, "create") && (
+          <div className="flex gap-2">
+            <NewStockMovementButton
+              products={movementOptions}
+              warehouses={warehouseOptions}
+            />
+            <NewWarehouseButton />
+            <TransferButton products={movementOptions} warehouses={warehouseOptions} />
+          </div>
+        )}
       </div>
 
       {!dbReady && (

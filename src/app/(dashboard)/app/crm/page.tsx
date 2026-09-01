@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getAuthzContext } from "@/server/auth";
+import { hasPermission } from "@/server/rbac";
+import { MODULES } from "@/lib/constants";
 import { listCustomers, listOpportunities } from "@/modules/crm";
 import type { Customer, Opportunity } from "@/db/schema";
 import { NewCustomerButton } from "@/components/feature/crm/new-customer-button";
@@ -45,7 +47,7 @@ export default async function CrmPage() {
             Gérez vos prospects, clients et partenaires.
           </p>
         </div>
-        <NewCustomerButton />
+        {hasPermission(ctx, MODULES.CRM, "create") && <NewCustomerButton />}
       </div>
 
       {!dbReady && (
@@ -70,7 +72,7 @@ export default async function CrmPage() {
             />
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full min-w-[520px] text-sm">
                 <thead>
                   <tr className="border-b text-left text-xs uppercase text-muted-foreground">
                     <th className="pb-2 pr-4">Nom</th>

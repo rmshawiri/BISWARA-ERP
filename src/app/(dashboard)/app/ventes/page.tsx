@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getAuthzContext } from "@/server/auth";
+import { hasPermission } from "@/server/rbac";
+import { MODULES } from "@/lib/constants";
 import { listProducts } from "@/modules/catalog";
 import { listCustomers } from "@/modules/crm";
 import { listDocuments } from "@/modules/sales";
@@ -91,10 +93,12 @@ export default async function VentesPage() {
             Devis, commandes, livraisons, factures et avoirs.
           </p>
         </div>
-        <NewSalesDocumentButton
-          products={productOptions}
-          customers={customerOptions}
-        />
+        {hasPermission(ctx, MODULES.SALES, "create") && (
+          <NewSalesDocumentButton
+            products={productOptions}
+            customers={customerOptions}
+          />
+        )}
         <ExportCsvButton
           filename="documents-commerciaux.csv"
           rows={documents.map((d) => ({
@@ -138,7 +142,7 @@ export default async function VentesPage() {
             />
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full min-w-[600px] text-sm">
                 <thead>
                   <tr className="border-b text-left text-xs uppercase text-muted-foreground">
                     <th className="pb-2 pr-4">Type</th>

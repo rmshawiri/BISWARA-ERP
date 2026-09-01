@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getAuthzContext } from "@/server/auth";
+import { hasPermission } from "@/server/rbac";
+import { MODULES } from "@/lib/constants";
 import { listProducts, listCategories, listUnits, listTaxes, listBrands } from "@/modules/catalog";
 import type { Product, ProductCategory, Unit, Tax, Brand } from "@/db/schema";
 import { NewProductButton } from "@/components/feature/catalog/new-product-button";
@@ -54,7 +56,7 @@ export default async function CataloguePage() {
             Gérez vos produits, services, catégories et tarifs.
           </p>
         </div>
-        <NewProductButton />
+        {hasPermission(ctx, MODULES.CATALOG, "create") && <NewProductButton />}
       </div>
 
       {!dbReady && (
