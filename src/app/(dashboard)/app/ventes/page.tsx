@@ -182,17 +182,15 @@ export default async function VentesPage() {
                         <td className="py-3">
                           <div className="flex items-center gap-1">
                             <SalesDocumentActions id={d.id} type={d.type} status={d.status} />
-                            {d.type === "invoice" && (
-                              <a
-                                href={`/api/documents/invoice/${d.id}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                                aria-label="Télécharger le PDF"
-                              >
-                                <FileText className="h-3.5 w-3.5" />
-                              </a>
-                            )}
+                            <a
+                              href={`/api/documents/sales/${d.id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                              aria-label="Télécharger le PDF"
+                            >
+                              <FileText className="h-3.5 w-3.5" />
+                            </a>
                           </div>
                         </td>
                       </tr>

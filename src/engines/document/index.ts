@@ -3,6 +3,7 @@ import "server-only";
 import React from "react";
 import { renderToBuffer, type DocumentProps } from "@react-pdf/renderer";
 import { InvoiceDocument, type InvoiceDocProps } from "./invoice";
+import { SalesDocument, type SalesDocProps } from "./sales-document";
 
 /**
  * DOCUMENT ENGINE — génère un PDF depuis un modèle.
@@ -21,4 +22,16 @@ export async function generateInvoicePdf(
   return renderToBuffer(element);
 }
 
+/** Génère le PDF d'un document commercial (devis/bon de commande/livraison/facture/avoir). */
+export async function generateSalesDocumentPdf(
+  props: SalesDocProps
+): Promise<Buffer> {
+  const element = React.createElement(
+    SalesDocument,
+    props
+  ) as unknown as React.ReactElement<DocumentProps>;
+  return renderToBuffer(element);
+}
+
 export type { InvoiceDocProps } from "./invoice";
+export type { SalesDocProps } from "./sales-document";
