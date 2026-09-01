@@ -2,7 +2,7 @@ import "server-only";
 
 import { eq, and, desc } from "drizzle-orm";
 import { db } from "@/db";
-import { employees, leaveRequests } from "@/db/schema";
+import { employees, leaveRequests, contracts, attendance } from "@/db/schema";
 import type { AuthzContext } from "@/types";
 import { logAudit } from "@/engines/audit";
 import { err, ok, Result } from "@/lib/result";
@@ -76,6 +76,39 @@ export async function listMyLeaveRequests(ctx: AuthzContext) {
       .from(leaveRequests)
       .where(eq(leaveRequests.employeeId, empRes.data.id))
       .orderBy(desc(leaveRequests.createdAt));
+    return ok(rows);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de lecture");
+  }
+}
+
+/** Mes contrats (self-service — l'employé ne voit que ses propres infos). */
+export async function listMyContracts(ctx: AuthzContext) {
+  try {
+    const empRes = await findMyEmployee(ctx);
+    if (!empRes.ok || !empRes.data) return ok([]);
+    const rows = await db()
+      .select()
+      .from(contracts)
+      .where(eq(contracts.employeeId, empRes.data.id))
+      .orderBy(desc(contracts.startDate));
+    return ok(rows);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de lecture");
+  }
+}
+
+/** Mes présences / planning (self-service). */
+export async function listMyAttendance(ctx: AuthzContext) {
+  try {
+    const empRes = await findMyEmployee(ctx);
+    if (!empRes.ok || !empRes.data) return ok([]);
+    const rows = await db()
+      .select()
+      .from(attendance)
+      .where(eq(attendance.employeeId, empRes.data.id))
+      .orderBy(desc(attendance.workDate))
+      .limit(30);
     return ok(rows);
   } catch (e) {
     return err(e instanceof Error ? e.message : "Erreur de lecture");

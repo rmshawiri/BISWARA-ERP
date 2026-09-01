@@ -1,14 +1,23 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getAuthzContext } from "@/server/auth";
-import { findMyEmployee, listMyLeaveRequests } from "@/modules/portal";
-import type { Employee, LeaveRequest } from "@/db/schema";
+import { findMyEmployee, listMyLeaveRequests, listMyContracts, listMyAttendance } from "@/modules/portal";
+import type { Employee, LeaveRequest, Contract, Attendance } from "@/db/schema";
 import { PortalLeave } from "@/components/feature/portal/portal-leave";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { UserRound } from "lucide-react";
+import { UserRound, FileText, CalendarClock } from "lucide-react";
+import { formatCurrency } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Portail Employé" };
+
+const CONTRACT_LABELS: Record<string, string> = {
+  cdi: "CDI",
+  cdd: "CDD",
+  stage: "Stage",
+  interim: "Intérim",
+  freelance: "Freelance",
+};
 
 export default async function PortailPage() {
   const ctx = await getAuthzContext();
@@ -16,11 +25,18 @@ export default async function PortailPage() {
 
   let employee: Employee | null = null;
   let leaves: LeaveRequest[] = [];
+  let contracts: Contract[] = [];
+  let attendance: Attendance[] = [];
+  const currency = ctx.organization?.currency ?? "KMF";
   try {
     const emp = await findMyEmployee(ctx);
     if (emp.ok) employee = emp.data;
     const lv = await listMyLeaveRequests(ctx);
     if (lv.ok) leaves = lv.data as LeaveRequest[];
+    const ct = await listMyContracts(ctx);
+    if (ct.ok) contracts = ct.data as Contract[];
+    const at = await listMyAttendance(ctx);
+    if (at.ok) attendance = at.data as Attendance[];
   } catch {
     // garde-fou
   }
@@ -31,7 +47,7 @@ export default async function PortailPage() {
         <UserRound className="h-6 w-6 text-primary" />
         <div>
           <h1 className="text-2xl font-bold">Mon espace employé</h1>
-          <p className="text-muted-foreground">Vos informations et vos demandes de congés.</p>
+          <p className="text-muted-foreground">Vos informations, votre contrat, vos présences et vos congés.</p>
         </div>
       </div>
 
@@ -58,6 +74,43 @@ export default async function PortailPage() {
               <div><p className="text-xs text-muted-foreground">Statut</p><Badge variant={employee.status === "active" ? "success" : "warning"}>{employee.status}</Badge></div>
             </CardContent>
           </Card>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Card>
+              <CardHeader className="flex-row items-center gap-2 space-y-0"><FileText className="h-4 w-4 text-primary" /><CardTitle className="text-base">Mon contrat</CardTitle></CardHeader>
+              <CardContent className="space-y-2">
+                {contracts.length === 0 && <p className="text-sm text-muted-foreground">Aucun contrat.</p>}
+                {contracts.map((c) => (
+                  <div key={c.id} className="rounded-lg border p-2 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">{CONTRACT_LABELS[c.contractType] ?? c.contractType}</span>
+                      <Badge variant={c.status === "active" ? "success" : "secondary"}>{c.status}</Badge>
+                    </div>
+                    <div className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+                      <p>{c.startDate ?? "—"} → {c.endDate ?? "—"}</p>
+                      {c.baseSalary != null && <p>Salaire de base : {formatCurrency(Number(c.baseSalary), currency)}</p>}
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex-row items-center gap-2 space-y-0"><CalendarClock className="h-4 w-4 text-primary" /><CardTitle className="text-base">Mes présences / planning</CardTitle></CardHeader>
+              <CardContent className="space-y-2">
+                {attendance.length === 0 && <p className="text-sm text-muted-foreground">Aucune présence enregistrée.</p>}
+                {attendance.map((a) => (
+                  <div key={a.id} className="flex items-center justify-between rounded-lg border p-2 text-sm">
+                    <span>{a.workDate ?? "—"}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {a.clockIn ?? "—"} → {a.clockOut ?? "—"}
+                    </span>
+                    <Badge variant={a.status === "present" ? "success" : "secondary"}>{a.status}</Badge>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
 
           <Card>
             <CardHeader><CardTitle className="text-base">Mes congés</CardTitle></CardHeader>
