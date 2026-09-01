@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getAuthzContext } from "@/server/auth";
+import { requireModuleAccess } from "@/server/module-gate";
 import { hasPermission } from "@/server/rbac";
 import { MODULES } from "@/lib/constants";
 import { db } from "@/db";
@@ -27,6 +28,7 @@ export const metadata: Metadata = { title: "Catalogue Produits & Services" };
 export default async function CataloguePage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
   const ctx = await getAuthzContext();
   if (!ctx || ctx.superAdmin) redirect("/login");
+  await requireModuleAccess(ctx, MODULES.CATALOG);
 
   const sp = await searchParams;
   const page = Math.max(1, Number(sp.page) || 1);

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getAuthzContext } from "@/server/auth";
+import { requireModuleAccess } from "@/server/module-gate";
+import { MODULES } from "@/lib/constants";
 import { listAssets, amortizationFor } from "@/modules/assets";
 import type { Asset } from "@/db/schema";
 import { NewAssetButton } from "@/components/feature/assets/new-asset-button";
@@ -31,6 +33,7 @@ const METHOD_LABELS: Record<string, string> = {
 export default async function ImmobilisationsPage() {
   const ctx = await getAuthzContext();
   if (!ctx || ctx.superAdmin) redirect("/login");
+  await requireModuleAccess(ctx, MODULES.ASSETS);
 
   let assets: Asset[] = [];
   let dbReady = true;

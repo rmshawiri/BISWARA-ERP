@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getAuthzContext } from "@/server/auth";
+import { requireModuleAccess } from "@/server/module-gate";
 import { hasPermission } from "@/server/rbac";
 import { MODULES } from "@/lib/constants";
 import { listProducts } from "@/modules/catalog";
@@ -37,6 +38,7 @@ function fmtQty(qty: number): string {
 export default async function StockPage() {
   const ctx = await getAuthzContext();
   if (!ctx || ctx.superAdmin) redirect("/login");
+  await requireModuleAccess(ctx, MODULES.STOCK);
 
   let products: Product[] = [];
   let warehouses: Warehouse[] = [];

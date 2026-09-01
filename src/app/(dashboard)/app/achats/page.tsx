@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getAuthzContext } from "@/server/auth";
+import { requireModuleAccess } from "@/server/module-gate";
+import { MODULES } from "@/lib/constants";
 import { listSuppliers, listPurchaseDocuments } from "@/modules/purchasing";
 import type { Supplier, PurchaseDocument } from "@/db/schema";
 import { NewSupplierButton } from "@/components/feature/purchasing/new-supplier-button";
@@ -31,6 +33,7 @@ const STATUS_LABELS: Record<string, string> = {
 export default async function AchatsPage() {
   const ctx = await getAuthzContext();
   if (!ctx || ctx.superAdmin) redirect("/login");
+  await requireModuleAccess(ctx, MODULES.PURCHASES);
 
   let suppliers: Supplier[] = [];
   const documents: PurchaseDocument[] = [];

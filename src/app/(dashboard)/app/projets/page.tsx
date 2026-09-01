@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getAuthzContext } from "@/server/auth";
+import { requireModuleAccess } from "@/server/module-gate";
+import { MODULES } from "@/lib/constants";
 import { listProjects, listTasks, isOverdue } from "@/modules/projects";
 import type { Project, ProjectTask } from "@/db/schema";
 import { NewProjectButton } from "@/components/feature/projects/new-project-button";
@@ -14,6 +16,7 @@ export const metadata: Metadata = { title: "Gestion de Projets" };
 export default async function ProjetsPage() {
   const ctx = await getAuthzContext();
   if (!ctx || ctx.superAdmin) redirect("/login");
+  await requireModuleAccess(ctx, MODULES.PROJECTS);
 
   let projects: Project[] = [];
   const tasksByProject: Record<string, ProjectTask[]> = {};

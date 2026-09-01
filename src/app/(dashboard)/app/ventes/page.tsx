@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getAuthzContext } from "@/server/auth";
+import { requireModuleAccess } from "@/server/module-gate";
 import { hasPermission } from "@/server/rbac";
 import { MODULES } from "@/lib/constants";
 import { listProducts } from "@/modules/catalog";
@@ -47,6 +48,7 @@ const STATUS_BADGE: Record<string, "secondary" | "info" | "success" | "warning" 
 export default async function VentesPage() {
   const ctx = await getAuthzContext();
   if (!ctx || ctx.superAdmin) redirect("/login");
+  await requireModuleAccess(ctx, MODULES.SALES);
 
   let products: Product[] = [];
   let customers: Customer[] = [];

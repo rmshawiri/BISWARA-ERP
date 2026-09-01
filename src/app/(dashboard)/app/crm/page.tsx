@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getAuthzContext } from "@/server/auth";
+import { requireModuleAccess } from "@/server/module-gate";
 import { hasPermission } from "@/server/rbac";
 import { MODULES } from "@/lib/constants";
 import { listCustomers, listOpportunities } from "@/modules/crm";
@@ -23,6 +24,7 @@ const typeLabel: Record<string, string> = {
 export default async function CrmPage() {
   const ctx = await getAuthzContext();
   if (!ctx || ctx.superAdmin) redirect("/login");
+  await requireModuleAccess(ctx, MODULES.CRM);
 
   let customers: Customer[] = [];
   let dbReady = true;

@@ -35,6 +35,7 @@ export default async function ComptabilitePage() {
   const ctx = await getAuthzContext();
   if (!ctx || ctx.superAdmin) redirect("/login");
   await requireModuleAccess(ctx, MODULES.ACCOUNTING);
+  await requireModuleAccess(ctx, MODULES.ACCOUNTING);
 
   let accounts: ChartOfAccount[] = [];
   let journals: Journal[] = [];

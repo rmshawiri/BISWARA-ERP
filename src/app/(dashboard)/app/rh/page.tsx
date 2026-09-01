@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getAuthzContext } from "@/server/auth";
+import { requireModuleAccess } from "@/server/module-gate";
+import { MODULES } from "@/lib/constants";
 import { listEmployees, listLeaveRequests, listContracts, listAttendance, listPayrolls } from "@/modules/hr";
 import { leaveBalance } from "@/modules/hr";
 import type { Employee, LeaveRequest, Contract, Attendance, Payroll } from "@/db/schema";
@@ -29,6 +31,7 @@ const LEAVE_STATUS: Record<string, "info" | "success" | "warning" | "destructive
 export default async function RhPage() {
   const ctx = await getAuthzContext();
   if (!ctx || ctx.superAdmin) redirect("/login");
+  await requireModuleAccess(ctx, MODULES.HR);
 
   let employees: Employee[] = [];
   let leaves: LeaveRequest[] = [];

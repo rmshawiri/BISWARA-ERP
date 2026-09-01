@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getAuthzContext } from "@/server/auth";
+import { requireModuleAccess } from "@/server/module-gate";
+import { MODULES } from "@/lib/constants";
 import { listVehicles, listDeliveries, listDrivers, listRoutes, listFuelLogs, listMaintenanceLogs, listIncidents } from "@/modules/logistics";
 import type { Vehicle, Delivery, Driver, Route, FuelLog, MaintenanceLog, Incident } from "@/db/schema";
 import { NewVehicleButton, NewDeliveryButton } from "@/components/feature/logistics/logistics-buttons";
@@ -28,6 +30,7 @@ const DELIVERY_STATUS_BADGE: Record<string, "info" | "success" | "destructive"> 
 export default async function LogistiquePage() {
   const ctx = await getAuthzContext();
   if (!ctx || ctx.superAdmin) redirect("/login");
+  await requireModuleAccess(ctx, MODULES.LOGISTICS);
 
   let vehicles: Vehicle[] = [];
   let deliveries: Delivery[] = [];
