@@ -69,7 +69,30 @@ export const webhooks = pgTable(
   (t) => [index("webhooks_org_idx").on(t.organizationId)]
 );
 
+/** Journal des livraisons Webhooks (heure, succès/échec, code HTTP, durée). */
+export const webhookDeliveries = pgTable(
+  "webhook_deliveries",
+  {
+    id: id(),
+    organizationId: uuid("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+    webhookId: uuid("webhook_id").references(() => webhooks.id, { onDelete: "set null" }),
+    event: text("event").notNull(),
+    url: text("url").notNull(),
+    method: text("method").notNull().default("POST"),
+    status: text("status").notNull().default("success"), // success | failed
+    statusCode: integer("status_code"),
+    response: text("response"),
+    durationMs: integer("duration_ms"),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index("webhook_deliveries_org_idx").on(t.organizationId),
+    index("webhook_deliveries_created_idx").on(t.createdAt),
+  ]
+);
+
 export type Currency = typeof currencies.$inferSelect;
 export type PaymentMethod = typeof paymentMethods.$inferSelect;
 export type ApiKey = typeof apiKeys.$inferSelect;
 export type Webhook = typeof webhooks.$inferSelect;
+export type WebhookDelivery = typeof webhookDeliveries.$inferSelect;

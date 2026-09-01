@@ -3,7 +3,7 @@ import "server-only";
 import { eq, and, sql } from "drizzle-orm";
 import { createHmac } from "node:crypto";
 import { db } from "@/db";
-import { webhooks } from "@/db/schema";
+import { webhooks, webhookDeliveries } from "@/db/schema";
 
 /**
  * WEBHOOK ENGINE — envoie un événement métier vers les URL de webhooks
@@ -15,7 +15,8 @@ import { webhooks } from "@/db/schema";
  *   { event, organizationId, deliveredAt, data }.
  * - Si une `secret_key` est définie, ajoute un en-tête de signature HMAC-SHA256
  *   (`x-biswara-signature: sha256=<hex>`), consommable par le récepteur.
- * - Met à jour `last_delivery_at` / `delivery_count`.
+ * - Journalise chaque livraison dans `webhook_deliveries` (heure, succès/échec,
+ *   code HTTP, durée) et met à jour `last_delivery_at` / `delivery_count`.
  * - Toujours non bloquant : en cas d'échec réseau/HTTP, l'action métier continue.
  */
 
@@ -55,16 +56,44 @@ export async function dispatchWebhook(
         headers["x-biswara-signature"] = `sha256=${createHmac("sha256", w.secretKey).update(body).digest("hex")}`;
       }
 
+      const started = Date.now();
+      let statusCode: number | null = null;
+      let ok = false;
+      let responseText: string | null = null;
       try {
-        await fetch(w.url, {
+        const res = await fetch(w.url, {
           method,
           headers,
           body,
           signal: AbortSignal.timeout(10_000),
         });
+        statusCode = res.status;
+        ok = res.ok;
+        responseText = (await res.text().catch(() => null))?.slice(0, 2000) ?? null;
+      } catch (e) {
+        ok = false;
+        responseText = e instanceof Error ? e.message.slice(0, 500) : "erreur réseau";
+      }
+      const durationMs = Date.now() - started;
+
+      // Journal de livraison (non bloquant).
+      try {
+        await db().insert(webhookDeliveries).values({
+          organizationId,
+          webhookId: w.id,
+          event,
+          url: w.url,
+          method,
+          status: ok ? "success" : "failed",
+          statusCode,
+          response: responseText,
+          durationMs,
+        });
       } catch {
         /* best-effort */
       }
+
+      // Compteur de livraison (non bloquant).
       try {
         await db()
           .update(webhooks)

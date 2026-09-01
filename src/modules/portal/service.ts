@@ -2,10 +2,11 @@ import "server-only";
 
 import { eq, and, desc } from "drizzle-orm";
 import { db } from "@/db";
-import { employees, leaveRequests, contracts, attendance } from "@/db/schema";
+import { employees, leaveRequests, contracts, attendance, salaryAdvances, payrolls } from "@/db/schema";
 import type { AuthzContext } from "@/types";
 import { logAudit } from "@/engines/audit";
 import { err, ok, Result } from "@/lib/result";
+import { MODULES } from "@/lib/constants";
 
 function requireOrg(ctx: AuthzContext) {
   if (!ctx.organization) throw new Error("Organisation introuvable.");
@@ -112,5 +113,75 @@ export async function listMyAttendance(ctx: AuthzContext) {
     return ok(rows);
   } catch (e) {
     return err(e instanceof Error ? e.message : "Erreur de lecture");
+  }
+}
+
+/** Mes bulletins de paie (self-service — l'employé ne voit que les siens). */
+export async function listMyPayrolls(ctx: AuthzContext) {
+  try {
+    const empRes = await findMyEmployee(ctx);
+    if (!empRes.ok || !empRes.data) return ok([]);
+    const rows = await db()
+      .select()
+      .from(payrolls)
+      .where(eq(payrolls.employeeId, empRes.data.id))
+      .orderBy(desc(payrolls.period));
+    return ok(rows);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de lecture");
+  }
+}
+
+/** Mes avances sur salaire (self-service). */
+export async function listMyAdvances(ctx: AuthzContext) {
+  try {
+    const empRes = await findMyEmployee(ctx);
+    if (!empRes.ok || !empRes.data) return ok([]);
+    const rows = await db()
+      .select()
+      .from(salaryAdvances)
+      .where(eq(salaryAdvances.employeeId, empRes.data.id))
+      .orderBy(desc(salaryAdvances.createdAt));
+    return ok(rows);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de lecture");
+  }
+}
+
+/** Demande d'avance sur salaire en self-service. */
+export async function requestSalaryAdvance(
+  ctx: AuthzContext,
+  input: { amount: number; reason?: string | null }
+) {
+  try {
+    const orgId = requireOrg(ctx);
+    const empRes = await findMyEmployee(ctx);
+    if (!empRes.ok || !empRes.data) return err("Aucun profil employé associé à votre compte.");
+    const amount = Math.round(input.amount ?? 0);
+    if (!Number.isFinite(amount) || amount <= 0) return err("Montant invalide.");
+    const row = await db()
+      .insert(salaryAdvances)
+      .values({
+        organizationId: orgId,
+        employeeId: empRes.data.id,
+        amount,
+        reason: input.reason?.trim() || null,
+        status: "pending",
+        requestedAt: new Date().toISOString().slice(0, 10),
+      })
+      .returning();
+    await logAudit({
+      userId: ctx.user.id,
+      userName: ctx.user.fullName,
+      organizationId: orgId,
+      module: MODULES.EMPLOYEE_PORTAL,
+      action: "advance.request",
+      entityType: "salary_advance",
+      entityId: row[0]?.id ?? null,
+      newValue: { amount },
+    });
+    return ok(true);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de demande");
   }
 }

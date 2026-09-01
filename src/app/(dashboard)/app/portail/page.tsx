@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getAuthzContext } from "@/server/auth";
-import { findMyEmployee, listMyLeaveRequests, listMyContracts, listMyAttendance } from "@/modules/portal";
-import type { Employee, LeaveRequest, Contract, Attendance } from "@/db/schema";
+import { findMyEmployee, listMyLeaveRequests, listMyContracts, listMyAttendance, listMyPayrolls, listMyAdvances } from "@/modules/portal";
+import type { Employee, LeaveRequest, Contract, Attendance, Payroll, SalaryAdvance } from "@/db/schema";
 import { PortalLeave } from "@/components/feature/portal/portal-leave";
+import { PortalAdvance } from "@/components/feature/portal/portal-advance";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { UserRound, FileText, CalendarClock } from "lucide-react";
+import { UserRound, FileText, CalendarClock, Wallet } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Portail Employé" };
@@ -27,6 +28,8 @@ export default async function PortailPage() {
   let leaves: LeaveRequest[] = [];
   let contracts: Contract[] = [];
   let attendance: Attendance[] = [];
+  let payrolls: Payroll[] = [];
+  let advances: SalaryAdvance[] = [];
   const currency = ctx.organization?.currency ?? "KMF";
   try {
     const emp = await findMyEmployee(ctx);
@@ -37,6 +40,10 @@ export default async function PortailPage() {
     if (ct.ok) contracts = ct.data as Contract[];
     const at = await listMyAttendance(ctx);
     if (at.ok) attendance = at.data as Attendance[];
+    const pr = await listMyPayrolls(ctx);
+    if (pr.ok) payrolls = pr.data as Payroll[];
+    const av = await listMyAdvances(ctx);
+    if (av.ok) advances = av.data as SalaryAdvance[];
   } catch {
     // garde-fou
   }
@@ -112,6 +119,51 @@ export default async function PortailPage() {
             </Card>
           </div>
 
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Card>
+              <CardHeader className="flex-row items-center gap-2 space-y-0"><FileText className="h-4 w-4 text-primary" /><CardTitle className="text-base">Mes bulletins de paie</CardTitle></CardHeader>
+              <CardContent className="space-y-2">
+                {payrolls.length === 0 && <p className="text-sm text-muted-foreground">Aucun bulletin de paie.</p>}
+                {payrolls.map((p) => (
+                  <div key={p.id} className="rounded-lg border p-2 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Période {p.period}</span>
+                      <Badge variant={p.status === "paid" ? "success" : "secondary"}>{p.status}</Badge>
+                    </div>
+                    <div className="mt-1 grid grid-cols-2 gap-x-3 text-xs text-muted-foreground">
+                      <span>Brut : {formatCurrency(Number(p.gross ?? 0), currency)}</span>
+                      <span>Retenues : -{formatCurrency(Number(p.deductions ?? 0), currency)}</span>
+                      <span className="col-span-2 font-medium text-foreground">
+                        Net : {formatCurrency(Number(p.net ?? 0), currency)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex-row items-center gap-2 space-y-0"><Wallet className="h-4 w-4 text-primary" /><CardTitle className="text-base">Avances sur salaire</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="rounded-lg border p-3">
+                  <PortalAdvance />
+                </div>
+                <div className="space-y-2">
+                  {advances.length === 0 && <p className="text-sm text-muted-foreground">Aucune avance demandée.</p>}
+                  {advances.map((a) => (
+                    <div key={a.id} className="flex items-center justify-between rounded-lg border p-2 text-sm">
+                      <span>{formatCurrency(Number(a.amount), currency)}</span>
+                      <span className="truncate px-2 text-xs text-muted-foreground">{a.reason ?? ""}</span>
+                      <Badge variant={a.status === "approved" ? "success" : a.status === "rejected" ? "destructive" : a.status === "paid" ? "info" : "warning"}>
+                        {a.status}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           <Card>
             <CardHeader><CardTitle className="text-base">Mes congés</CardTitle></CardHeader>
             <CardContent>
@@ -123,6 +175,7 @@ export default async function PortailPage() {
                   endDate: l.endDate ?? "",
                   days: l.days,
                   status: l.status,
+                  notes: l.notes,
                 }))}
               />
             </CardContent>

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getAuthzContext } from "@/server/auth";
-import { requestSelfLeave } from "./service";
+import { requestSelfLeave, requestSalaryAdvance } from "./service";
 import type { Result } from "@/lib/result";
 
 export async function requestSelfLeaveAction(payload: {
@@ -24,6 +24,18 @@ export async function requestSelfLeaveAction(payload: {
     days: payload.days || 1,
     notes: payload.notes || null,
   });
+  if (res.ok) revalidatePath("/app/portail");
+  return res;
+}
+
+export async function requestSalaryAdvanceAction(payload: {
+  amount: number;
+  reason?: string;
+}): Promise<Result<unknown>> {
+  const ctx = await getAuthzContext();
+  if (!ctx || ctx.superAdmin || !ctx.organization)
+    return { ok: false, error: "Authentification requise." };
+  const res = await requestSalaryAdvance(ctx, { amount: payload.amount ?? 0, reason: payload.reason });
   if (res.ok) revalidatePath("/app/portail");
   return res;
 }

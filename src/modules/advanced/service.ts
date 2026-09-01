@@ -1,8 +1,8 @@
 import "server-only";
 
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { db } from "@/db";
-import { currencies, paymentMethods, apiKeys, webhooks } from "@/db/schema";
+import { currencies, paymentMethods, apiKeys, webhooks, webhookDeliveries } from "@/db/schema";
 import type { AuthzContext } from "@/types";
 import { hasPermission } from "@/server/rbac";
 import { logAudit } from "@/engines/audit";
@@ -152,5 +152,21 @@ export async function removeWebhook(ctx: AuthzContext, id: string) {
     return ok(true);
   } catch (e) {
     return err(e instanceof Error ? e.message : "Erreur de suppression");
+  }
+}
+
+/* ---- Journal des livraisons Webhooks ---- */
+export async function listWebhookDeliveries(ctx: AuthzContext) {
+  try {
+    const orgId = requireAdmin(ctx);
+    const rows = await db()
+      .select()
+      .from(webhookDeliveries)
+      .where(eq(webhookDeliveries.organizationId, orgId))
+      .orderBy(desc(webhookDeliveries.createdAt))
+      .limit(50);
+    return ok(rows);
+  } catch (e) {
+    return err(e instanceof Error ? e.message : "Erreur de lecture du journal");
   }
 }

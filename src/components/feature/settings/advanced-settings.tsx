@@ -35,11 +35,13 @@ export function AdvancedSettings({
   paymentMethods,
   apiKeys,
   webhooks,
+  webhookDeliveries,
 }: {
   currencies: { id: string; code: string; name: string | null; rateToKmf: number; isDefault: boolean }[];
   paymentMethods: { id: string; name: string; code: string | null; active: boolean }[];
   apiKeys: { id: string; label: string | null; keyText: string; active: boolean }[];
   webhooks: { id: string; event: string; url: string; name: string | null; method: string; active: boolean; lastDeliveryAt: string | null; deliveryCount: number }[];
+  webhookDeliveries: { id: string; event: string; url: string; method: string; status: string; statusCode: number | null; statusText: string | null; durationMs: number | null; createdAt: string }[];
 }) {
   const router = useRouter();
   const [hookOpen, setHookOpen] = React.useState(false);
@@ -212,6 +214,59 @@ export function AdvancedSettings({
               </div>
             </div>
           ))}
+        </CardContent>
+      </Card>
+
+      {/* Journal des livraisons Webhooks */}
+      <Card className="lg:col-span-2">
+        <CardHeader className="flex-row items-center gap-2 space-y-0">
+          <Webhook className="h-4 w-4" />
+          <CardTitle className="text-base">Journal des livraisons Webhooks</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {webhookDeliveries.length === 0 && (
+            <p className="text-sm text-muted-foreground">Aucune livraison enregistrée.</p>
+          )}
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b text-left uppercase text-muted-foreground">
+                  <th className="py-2 pr-4">Date</th>
+                  <th className="py-2 pr-4">Événement</th>
+                  <th className="py-2 pr-4">Méthode</th>
+                  <th className="py-2 pr-4">URL</th>
+                  <th className="py-2 pr-4">Statut</th>
+                  <th className="py-2 pr-4">Code</th>
+                  <th className="py-2">Durée</th>
+                </tr>
+              </thead>
+              <tbody>
+                {webhookDeliveries.map((d) => (
+                  <tr key={d.id} className="border-b last:border-0">
+                    <td className="py-2 pr-4 whitespace-nowrap text-muted-foreground">
+                      {new Date(d.createdAt).toLocaleString("fr-FR")}
+                    </td>
+                    <td className="py-2 pr-4">{d.event}</td>
+                    <td className="py-2 pr-4">{d.method}</td>
+                    <td className="py-2 pr-4 max-w-[220px] truncate">{d.url}</td>
+                    <td className="py-2 pr-4">
+                      <Badge variant={d.status === "success" ? "success" : "destructive"}>{d.status}</Badge>
+                    </td>
+                    <td className="py-2 pr-4">{d.statusCode ?? "—"}</td>
+                    <td className="py-2">{d.durationMs != null ? `${d.durationMs} ms` : "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {webhookDeliveries.some((d) => d.statusText) && (
+            <details className="mt-3">
+              <summary className="text-xs text-muted-foreground cursor-pointer">Voir les réponses/erreurs</summary>
+              <pre className="mt-2 max-h-40 overflow-auto rounded bg-muted/40 p-2 text-xs">
+                {webhookDeliveries.filter((d) => d.statusText).map((d) => `${d.event} [${d.statusCode ?? "—"}]: ${d.statusText}`).join("\n")}
+              </pre>
+            </details>
+          )}
         </CardContent>
       </Card>
     </div>

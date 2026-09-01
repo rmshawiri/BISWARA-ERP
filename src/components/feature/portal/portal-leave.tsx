@@ -20,19 +20,20 @@ import {
 export function PortalLeave({
   leaves,
 }: {
-  leaves: { id: string; type: string; startDate: string; endDate: string; days: number; status: string }[];
+  leaves: { id: string; type: string; startDate: string; endDate: string; days: number; status: string; notes?: string | null }[];
 }) {
   const router = useRouter();
   const [type, setType] = React.useState("annual");
   const [start, setStart] = React.useState("");
   const [end, setEnd] = React.useState("");
   const [days, setDays] = React.useState("1");
+  const [notes, setNotes] = React.useState("");
 
   function submit() {
-    requestSelfLeaveAction({ type, startDate: start, endDate: end, days: Number(days) || 1 }).then((res) => {
+    requestSelfLeaveAction({ type, startDate: start, endDate: end, days: Number(days) || 1, notes }).then((res) => {
       if (res.ok) {
         toast.success("Demande envoyée");
-        setStart(""); setEnd("");
+        setStart(""); setEnd(""); setNotes("");
       } else toast.error(res.error ?? "Erreur");
       router.refresh();
     });
@@ -55,6 +56,8 @@ export function PortalLeave({
               <SelectItem value="annual">Annuel</SelectItem>
               <SelectItem value="sick">Maladie</SelectItem>
               <SelectItem value="personal">Personnel</SelectItem>
+              <SelectItem value="absence">Absence justifiée</SelectItem>
+              <SelectItem value="maternity">Maternité</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -77,11 +80,25 @@ export function PortalLeave({
         </div>
       </div>
 
+      <div className="space-y-1">
+        <Label className="text-xs">Motif / justification</Label>
+        <textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Précisez le motif (ex : rendez-vous médical, événement familial, congé exceptionnel)…"
+          rows={2}
+          className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        />
+      </div>
+
       <div className="space-y-2">
         {leaves.length === 0 && <p className="text-sm text-muted-foreground">Aucune demande de congé.</p>}
         {leaves.map((l) => (
           <div key={l.id} className="flex items-center justify-between rounded-lg border p-2 text-sm">
-            <span>{l.type} · {l.startDate} → {l.endDate} · {l.days} j</span>
+            <div className="min-w-0">
+              <span>{l.type} · {l.startDate} → {l.endDate} · {l.days} j</span>
+              {l.notes && <p className="truncate text-xs text-muted-foreground">{l.notes}</p>}
+            </div>
             <Badge variant={badge[l.status] ?? "secondary"}>{l.status}</Badge>
           </div>
         ))}

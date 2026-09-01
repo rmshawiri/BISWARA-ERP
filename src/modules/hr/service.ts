@@ -7,6 +7,7 @@ import type { AuthzContext } from "@/types";
 import { hasPermission } from "@/server/rbac";
 import { assertOrgRef } from "@/server/org-ref";
 import { logAudit } from "@/engines/audit";
+import { dispatchWebhook } from "@/engines/webhook";
 import { MODULES, type PermissionAction } from "@/lib/constants";
 import { err, ok, Result } from "@/lib/result";
 import { autoPostPayrollEntry } from "@/modules/accounting";
@@ -66,6 +67,15 @@ export async function createEmployee(
       entityId: row.id,
       newValue: { name: `${row.firstName} ${row.lastName}` },
     });
+    // Webhook best-effort (non bloquant) : "Employé créé".
+    try {
+      void dispatchWebhook(orgId, "employee.created", {
+        id: row.id,
+        name: `${row.firstName} ${row.lastName}`,
+        position: row.position,
+        department: row.department,
+      });
+    } catch { /* non bloquant */ }
     return ok(row);
   } catch (e) {
     return err(e instanceof Error ? e.message : "Erreur de création");

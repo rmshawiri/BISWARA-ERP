@@ -11,6 +11,8 @@ import {
   TrendingUp,
   Users,
   Wallet,
+  AlertTriangle,
+  PieChart,
 } from "lucide-react";
 import { getAuthzContext } from "@/server/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,8 +22,8 @@ import { KpiCard } from "@/components/feature/dashboard/kpi-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { formatCurrency } from "@/lib/utils";
 import { db } from "@/db";
-import { salesDocuments, products, customers, payments, opportunities } from "@/db/schema";
-import { eq, and, ne } from "drizzle-orm";
+import { salesDocuments, products, customers, payments, opportunities, stockMovements } from "@/db/schema";
+import { eq, and, ne, sql } from "drizzle-orm";
 import type { LucideIcon } from "lucide-react";
 
 export const metadata: Metadata = { title: "Tableau de bord" };
@@ -96,9 +98,44 @@ export default async function DashboardPage() {
   let chart: number[] = [];
   let dayLabels: string[] = [];
   let dbReady = true;
+  let stockValue = 0;
+  const lowStock: { name: string; qty: number; ref?: string | null }[] = [];
+  let pipeline: { stage: string; value: number }[] = [];
 
   try {
     stats = await realStats(org.id, currency);
+
+    // Stock : valeur + alertes rupture.
+    const [prods, levels] = await Promise.all([
+      db()
+        .select({ id: products.id, name: products.name, reference: products.reference, salePrice: products.salePrice, isService: products.isService })
+        .from(products)
+        .where(and(eq(products.organizationId, org.id), eq(products.active, true))),
+      db()
+        .select({
+          productId: stockMovements.productId,
+          qty: sql<number>`sum(case when ${stockMovements.type} in ('in','adjust','inventory') then ${stockMovements.quantity} else -${stockMovements.quantity} end)`,
+        })
+        .from(stockMovements)
+        .where(eq(stockMovements.organizationId, org.id))
+        .groupBy(stockMovements.productId),
+    ]);
+    const qtyMap = new Map(levels.map((l) => [l.productId, Number(l.qty ?? 0)]));
+    for (const p of prods) {
+      const qty = qtyMap.get(p.id) ?? 0;
+      if (!p.isService) stockValue += Number(p.salePrice ?? 0) * qty;
+      if (!p.isService && qty <= 10 && qty >= 0) lowStock.push({ name: p.name, qty, ref: p.reference });
+    }
+    lowStock.sort((a, b) => a.qty - b.qty);
+
+    // Pipeline CRM : répartition par étape (opportunités ouvertes).
+    const oppRows = await db()
+      .select({ stage: opportunities.stage, value: opportunities.value })
+      .from(opportunities)
+      .where(and(eq(opportunities.organizationId, org.id), eq(opportunities.status, "open")));
+    const pipeMap = new Map<string, number>();
+    for (const o of oppRows) pipeMap.set(o.stage, (pipeMap.get(o.stage) ?? 0) + Number(o.value ?? 0));
+    pipeline = [...pipeMap.entries()].map(([stage, value]) => ({ stage, value: Math.round(value) }));
 
     // Activité récente réelle : derniers documents commerciaux.
     const recentDocs = await db()
@@ -178,6 +215,45 @@ export default async function DashboardPage() {
         {stats.map((s) => (
           <KpiCard key={s.label} {...s} />
         ))}
+        <KpiCard icon={Boxes} label="Valeur du stock" value={formatCurrency(stockValue, currency)} tone="cyan" />
+      </div>
+
+      {/* Stock & Pipeline CRM */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader className="flex-row items-center gap-2 space-y-0">
+            <AlertTriangle className="h-4 w-4 text-warning" />
+            <CardTitle className="text-base">Alertes stock (rupture / sous-seuil)</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {lowStock.length === 0 && <p className="text-sm text-muted-foreground">Aucune alerte stock. Bon niveau !</p>}
+            {lowStock.map((s, i) => (
+              <div key={i} className="flex items-center justify-between rounded-lg border p-2 text-sm">
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{s.name}</p>
+                  {s.ref && <p className="text-xs text-muted-foreground">{s.ref}</p>}
+                </div>
+                <Badge variant="warning">{s.qty} unité(s)</Badge>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex-row items-center gap-2 space-y-0">
+            <PieChart className="h-4 w-4 text-primary" />
+            <CardTitle className="text-base">Pipeline CRM (par étape)</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {pipeline.length === 0 && <p className="text-sm text-muted-foreground">Aucune opportunité ouverte.</p>}
+            {pipeline.map((s) => (
+              <div key={s.stage} className="flex items-center justify-between rounded-lg border p-2 text-sm">
+                <span className="capitalize">{s.stage}</span>
+                <span className="font-medium tabular-nums">{formatCurrency(s.value, currency)}</span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Zone graphique + activité */}

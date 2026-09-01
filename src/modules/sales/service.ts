@@ -6,6 +6,7 @@ import { salesDocuments, salesDocumentLines, payments, stockMovements, financial
 import type { AuthzContext } from "@/types";
 import { hasPermission } from "@/server/rbac";
 import { logAudit } from "@/engines/audit";
+import { dispatchWebhook } from "@/engines/webhook";
 import { MODULES, type PermissionAction } from "@/lib/constants";
 import { err, ok, Result } from "@/lib/result";
 import { buildDocumentNumber } from "@/lib/numbering";
@@ -135,6 +136,16 @@ export async function createSalesDocument(
 
     try {
       await notifyOrgUsers(orgId, `${PREFIX[input.type] ?? "Doc"} ${number} créé`, "Un nouveau document commercial a été créé.", "/app/ventes", MODULES.SALES);
+    } catch { /* non bloquant */ }
+
+    // Webhook best-effort (non bloquant).
+    try {
+      const webhookEvent =
+        input.type === "order" ? "order.created" :
+        input.type === "invoice" ? "invoice.created" : null;
+      if (webhookEvent) {
+        void dispatchWebhook(orgId, webhookEvent, { id: document.id, number, total: totals.total, type: input.type });
+      }
     } catch { /* non bloquant */ }
 
     return ok({ document, totals });
@@ -360,6 +371,17 @@ export async function recordPayment(
 
     try {
       await notifyOrgUsers(orgId, `Paiement ${input.amount} ${ctx.organization?.currency ?? "KMF"}`, `Paiement reçu sur ${doc.number}.`, "/app/ventes", MODULES.SALES);
+    } catch { /* non bloquant */ }
+
+    // Webhook best-effort (non bloquant) : "Paiement reçu".
+    try {
+      void dispatchWebhook(orgId, "payment.received", {
+        documentId: doc.id,
+        number: doc.number,
+        amount: input.amount,
+        method: input.method,
+        reference: input.reference ?? null,
+      });
     } catch { /* non bloquant */ }
 
     // Encaissement -> trésorerie (best-effort, compte choisi automatiquement).

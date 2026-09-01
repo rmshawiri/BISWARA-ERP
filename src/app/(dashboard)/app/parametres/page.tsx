@@ -19,8 +19,9 @@ import {
   listPaymentMethods,
   listApiKeys,
   listWebhooks,
+  listWebhookDeliveries,
 } from "@/modules/advanced";
-import type { Currency, PaymentMethod, ApiKey, Webhook } from "@/db/schema";
+import type { Currency, PaymentMethod, ApiKey, Webhook, WebhookDelivery } from "@/db/schema";
 
 export const metadata: Metadata = { title: "Paramètres" };
 
@@ -30,7 +31,7 @@ export default async function SettingsPage() {
 
   const org = ctx.organization;
 
-  const [modulesRes, orgModulesRes, activitiesRes, orgActivitiesRes, currenciesRes, paymentMethodsRes, apiKeysRes, webhooksRes] =
+  const [modulesRes, orgModulesRes, activitiesRes, orgActivitiesRes, currenciesRes, paymentMethodsRes, apiKeysRes, webhooksRes, webhookDeliveriesRes] =
     await Promise.all([
       listModuleCatalog(ctx),
       listOrgModules(ctx),
@@ -40,6 +41,7 @@ export default async function SettingsPage() {
       listPaymentMethods(ctx),
       listApiKeys(ctx),
       listWebhooks(ctx),
+      listWebhookDeliveries(ctx),
     ]);
 
   return (
@@ -132,6 +134,7 @@ export default async function SettingsPage() {
         paymentMethods={(paymentMethodsRes.ok ? paymentMethodsRes.data : []).map((m) => ({ id: m.id, name: m.name, code: m.code, active: m.active }))}
         apiKeys={(apiKeysRes.ok ? apiKeysRes.data : []).map((k) => ({ id: k.id, label: k.label, keyText: k.keyText, active: k.active }))}
         webhooks={(webhooksRes.ok ? webhooksRes.data : []).map((w) => ({ id: w.id, event: w.event, url: w.url, name: w.name, method: w.method, active: w.active, lastDeliveryAt: w.lastDeliveryAt ? w.lastDeliveryAt.toISOString() : null, deliveryCount: Number(w.deliveryCount ?? 0) }))}
+        webhookDeliveries={(webhookDeliveriesRes.ok ? webhookDeliveriesRes.data : []).map((d) => ({ id: d.id, event: d.event, url: d.url, method: d.method, status: d.status, statusCode: d.statusCode ? Number(d.statusCode) : null, statusText: d.response, durationMs: d.durationMs ? Number(d.durationMs) : null, createdAt: d.createdAt.toISOString() }))}
       />
     </div>
   );

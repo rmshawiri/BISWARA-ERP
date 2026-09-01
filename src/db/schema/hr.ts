@@ -107,6 +107,27 @@ export const payrolls = pgTable(
   (t) => [index("payrolls_org_idx").on(t.organizationId)]
 );
 
+/** Avances sur salaire (Portail Employé, self-service). */
+export const salaryAdvances = pgTable(
+  "salary_advances",
+  {
+    id: id(),
+    organizationId: uuid("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+    employeeId: uuid("employee_id").notNull().references(() => employees.id, { onDelete: "cascade" }),
+    amount: money("amount"),
+    reason: text("reason"),
+    status: status("pending"), // pending | approved | rejected | paid
+    requestedAt: text("requested_at"),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [
+    index("salary_advances_org_idx").on(t.organizationId),
+    index("salary_advances_emp_idx").on(t.employeeId),
+  ]
+);
+
 export type Contract = typeof contracts.$inferSelect;
 export type Attendance = typeof attendance.$inferSelect;
 export type Payroll = typeof payrolls.$inferSelect;
+export type SalaryAdvance = typeof salaryAdvances.$inferSelect;
